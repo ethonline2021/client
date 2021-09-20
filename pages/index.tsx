@@ -11,6 +11,8 @@ const Video = styled.video`
   width: 100%;
 `
 
+let session = null
+
 const Home: NextPage = () => {
   const videoEl = useRef(null)
   const stream = useRef(null)
@@ -46,7 +48,7 @@ const Home: NextPage = () => {
 
     const client = new Client()
 
-    const session = client.cast(stream.current, streamKey)
+    session = client.cast(stream.current, streamKey)
 
     session.on('open', () => {
       setLog('Stream started, check livepeer dashboard')
@@ -65,7 +67,7 @@ const Home: NextPage = () => {
   }
 
   const onStopClick = async () => {
-
+    session.close()
   }
 
   return (
