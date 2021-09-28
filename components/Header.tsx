@@ -1,8 +1,11 @@
 import { useWeb3React } from "@web3-react/core"
 import * as Antd from "antd"
 import { BasicProps, Header as AntdHeader } from 'antd/lib/layout/layout'
+import { ethers } from "ethers"
+import { useContext, useEffect, useState } from "react"
 import styled from "styled-components"
 import { injected } from "../connectors"
+import { useContracts, useEagerConnect } from "../hooks"
 
 const Account = styled.div`
   margin-left: auto;
@@ -13,19 +16,31 @@ const AppHeader : React.FunctionComponent<BasicProps> = styled(AntdHeader)`
 `
 
 const Menu = () => {
-  const {activate, deactivate, account, active, error, connector} = useWeb3React()
+  const {activate, deactivate, account, active, error, connector, library} = useWeb3React()
+  const {main} = useContracts()
+
+  const [activatingConnector, setActivatingConnector] = useState<any>()
+  useEffect(() => {
+    if (activatingConnector && activatingConnector === connector) {
+      setActivatingConnector(undefined)
+    }
+  }, [activatingConnector, connector])
+
+  const triedEager = useEagerConnect()
 
   // TODO improve this
   if (error) {
     console.error(error)
   }
 
-  const onWalletBtnClick = () => {
+  const onWalletBtnClick = async () => {
+    setActivatingConnector(injected)
+
     if (active) {
       return deactivate()
     }
 
-    return activate(injected)
+    await activate(injected, undefined, true)
   }
 
   return (
@@ -35,11 +50,11 @@ const Menu = () => {
         <Antd.Menu.Item key="1">Home</Antd.Menu.Item>
         <Antd.Menu.Item key="2">Creators</Antd.Menu.Item>
       </Antd.Menu>
-      <Account>
+      {/* <Account>
         <Antd.Button onClick={onWalletBtnClick}>
-          {active ? 'Connected to ' + account : 'Wallet Connect'}
+          {signedUp ? 'Connected to ' + account : 'Wallet Connect'}
         </Antd.Button>
-      </Account>
+      </Account> */}
     </AppHeader>
   )
 }
