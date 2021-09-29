@@ -22,7 +22,12 @@ const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => v
   return (
     <Modal title="SignUp" visible={visible}
       footer={[
-        <Button form="signup-modal-form" key="submit" htmlType="submit">
+        <Button
+          form="signup-modal-form"
+          key="submit"
+          htmlType="submit"
+          type="primary"
+        >
           Submit
         </Button>
       ]}

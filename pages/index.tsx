@@ -1,4 +1,5 @@
-import { Button, Input } from 'antd'
+import { Button, Input, Modal } from 'antd'
+import { ethers } from 'ethers'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
@@ -14,7 +15,7 @@ import { useContracts } from '../hooks'
 import { injected } from '../connectors'
 import WalletErrors from '../components/WalletErrors'
 import Profile from '../components/Profile'
-import { ethers } from 'ethers'
+import CreateEvent from '../components/CreateEvent'
 
 const Video = styled.video`
   width: 100%;
@@ -28,6 +29,7 @@ const Home: NextPage = () => {
   const [contents, setContents] = useState()
   const [signupModal, setSignupModal] = useState(false)
   const [profileModal, setProfileModal] = useState(false)
+  const [eventModal, setEventModal] = useState(false)
   const [deployedSC, setDeployedSC] = useState(null)
 
   useEffect(() => {
@@ -40,7 +42,15 @@ const Home: NextPage = () => {
           const dsc = new ethers.Contract(deployed, UserContract.abi, signer)
           setDeployed(dsc)
 
-          setContents(<p>You are signed up! <a onClick={() => setProfileModal(true)}>Edit Profile</a></p>)
+          setContents(<>
+            <p>
+              You are signed up!
+              <a onClick={() => setProfileModal(true)}>Edit Profile</a>
+            </p>
+            <p>
+              <a onClick={() => setEventModal(true)}>Create event</a>
+            </p>
+          </>)
         } else {
           setContents(<a onClick={() => {
             setSignupModal(true)
@@ -52,7 +62,7 @@ const Home: NextPage = () => {
         }}>Unlock wallet</a>)
       }
     })()
-  }, [active, main, account, activate])
+  }, [active, main, account, activate, setDeployed, signer])
 
   return (
     <div>
@@ -66,9 +76,12 @@ const Home: NextPage = () => {
       />
       <Profile
         visible={profileModal}
-        deployed={deployedSC}
         close={() => setProfileModal(false)}
         onComplete={() => setProfileModal(false)}
+      />
+      <CreateEvent
+        visible={eventModal}
+        close={() => setEventModal(false)}
       />
       <WalletErrors />
     </div>

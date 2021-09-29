@@ -10,12 +10,10 @@ const Profile = ({
   visible,
   close,
   onComplete,
-  deployedSC,
 } : {
   visible: boolean,
   close: () => void,
   onComplete: (result: any) =>  void,
-  deployedSC: string,
 }) => {
   const { main, deployed } = useContracts()
   const { account } = useWeb3React()
@@ -29,7 +27,6 @@ const Profile = ({
       if (main && deployed && !username?.length && !description?.length) {
         const [, user, desc] = await deployed.getDetails()
 
-        console.log('setting username and description:', user, desc)
         setUsername(user)
         setDescription(desc)
       }
@@ -51,9 +48,11 @@ const Profile = ({
       setError(rcpt.logs.join(', '))
     }
 
-    onComplete(rcpt)
     setLoading(false)
+    setUsername(values.username)
+    setDescription(values.description)
 
+    onComplete(rcpt)
     close()
 
     return rcpt
@@ -68,6 +67,7 @@ const Profile = ({
           htmlType="submit"
           loading={loading}
           disabled={loading}
+          type="primary"
         >
           Submit
         </Button>
