@@ -1,8 +1,8 @@
 import { Button, Form, Input, Modal } from 'antd'
+import { useEffect } from 'react'
 import { useContracts } from '../hooks'
 
-const SignUp = ({visible, close, onComplete}) => {
-
+const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => void, onComplete: (result: any) => void}) => {
   const { main } = useContracts()
 
   const onSend = async (values: any) => {

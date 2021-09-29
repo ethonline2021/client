@@ -8,9 +8,13 @@ import { Client } from '@livepeer/webrtmp-sdk'
 import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 
+import UserContract from '../contracts/contracts/User.sol/User.json'
 import SignUp from '../components/Signup'
 import { useContracts } from '../hooks'
 import { injected } from '../connectors'
+import WalletErrors from '../components/WalletErrors'
+import Profile from '../components/Profile'
+import { ethers } from 'ethers'
 
 const Video = styled.video`
   width: 100%;
@@ -19,117 +23,54 @@ const Video = styled.video`
 let session = null
 
 const Home: NextPage = () => {
-  const videoEl = useRef(null)
-  const stream = useRef(null)
-  const [log, setLog] = useState(null)
-  const [key, setKey] = useState('m43e-kmg0-uhgs-j9pl')
-  const [status, setStatus] = useState(null)
-  const {main} = useContracts()
+  const {main, signer, setDeployed} = useContracts()
   const {account, active, activate, connector, library} = useWeb3React()
   const [contents, setContents] = useState()
   const [signupModal, setSignupModal] = useState(false)
+  const [profileModal, setProfileModal] = useState(false)
+  const [deployedSC, setDeployedSC] = useState(null)
 
-  useEffect(async () => {
-    if (active && main) {
-      const deployed = await main.getDeployedUser(account)
-      if (!/^0x0+0$/.test(deployed)) {
-        setContents('You are signed up!')
+  useEffect(() => {
+    ;(async () => {
+      if (active && main) {
+        const deployed = await main.getDeployedUser(account)
+        setDeployedSC(deployed)
+
+        if (!/^0x0+0$/.test(deployed)) {
+          const dsc = new ethers.Contract(deployed, UserContract.abi, signer)
+          setDeployed(dsc)
+
+          setContents(<p>You are signed up! <a onClick={() => setProfileModal(true)}>Edit Profile</a></p>)
+        } else {
+          setContents(<a onClick={() => {
+            setSignupModal(true)
+          }}>Sign up</a>)
+        }
       } else {
         setContents(<a onClick={() => {
-          setSignupModal(true)
-        }}>Sign up</a>)
+          activate(injected)
+        }}>Unlock wallet</a>)
       }
-    } else {
-      setContents(<a onClick={() => {
-        activate(injected)
-      }}>Unlock wallet</a>)
-    }
-  }, [active, main])
-
-  // useEffect(() => {
-  //   ;(async () => {
-  //     videoEl.current.volume = 0
-
-  //     stream.current = await navigator.mediaDevices.getUserMedia({
-  //       video: true,
-  //       audio: true,
-  //     })
-
-  //     videoEl.current.srcObject = stream.current
-  //     videoEl.current.play()
-  //   })()
-  // })
-
-  // const onStartClick = async () => {
-  //   const streamKey = key
-
-  //   if (!stream.current) {
-  //     alert('Video stream was not started.')
-  //   }
-
-  //   if (!streamKey) {
-  //     alert('Invalid streamKey.')
-  //     return
-  //   }
-
-  //   const client = new Client()
-
-  //   session = client.cast(stream.current, streamKey)
-
-  //   session.on('open', () => {
-  //     setLog('Stream started, check livepeer dashboard')
-  //     setStatus(true)
-  //   })
-
-  //   session.on('close', () => {
-  //     setLog('Stream stopped.')
-  //     setStatus(false)
-  //   })
-
-  //   session.on('error', (err) => {
-  //     setLog('Stream error.', err.message)
-  //     setStatus(false)
-  //   })
-  // }
-
-  // const onStopClick = async () => {
-  //   session.close()
-  // }
+    })()
+  }, [active, main, account, activate])
 
   return (
     <div>
-      <p>Emptied for development</p>
       {
         contents
       }
       <SignUp
-
         visible={signupModal}
         close={() => setSignupModal(false)}
         onComplete={() => setSignupModal(false)}
       />
-      {/* <Input
-        type="text"
-        placeholder="streamKey"
-        value={key}
-        onChange={(e) => setKey(e.value)}
+      <Profile
+        visible={profileModal}
+        deployed={deployedSC}
+        close={() => setProfileModal(false)}
+        onComplete={() => setProfileModal(false)}
       />
-      <Video ref={videoEl} />
-      <If condition={status}>
-        <Then>
-          <Button onClick={onStopClick}>
-            Stop
-          </Button>
-        </Then>
-        <Else>
-          <Button onClick={onStartClick}>
-            Start
-          </Button>
-        </Else>
-      </If>
-      <p>
-        {log || 'Press start to begin streaming'}
-      </p> */}
+      <WalletErrors />
     </div>
   )
 }
