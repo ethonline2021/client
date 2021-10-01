@@ -6,35 +6,14 @@ import Link from "next/link"
 import { ReactNode, useEffect } from "react"
 import styled from "styled-components"
 
+import Item from "../../components/Item"
 import Loading from "../../components/Loading"
 
-const Item = ({title, description, address}) => {
-  const Wrapper = styled.div`
-    display: flex;
-    flex-direction: column;
-  `
-
-  const P = styled.p`
-    flex: 1;
-  `
-
-  return (
-    <Wrapper>
-      <div>
-        <Link href={`/items/${address}`}>
-          <a>{title}</a>
-        </Link>
-      </div>
-      <P>{description}</P>
-    </Wrapper>
-  )
-}
-
-const MyItemsList = () => {
+const AllItemsList = () => {
   const { account } = useWeb3React()
   const ITEMS_LIST = gql`
     {
-      items(where: {owner: "${account}"}) {
+      items(where: {owner_not_contains: "${account}"}) {
         id
         title
         description
@@ -47,7 +26,7 @@ const MyItemsList = () => {
   return (
     <Loading loading={loading}>
       {
-        data && data.items.length && data.items.map((item, id) => {
+        data && data.items.length > 0 && data.items.map((item, id) => {
           return <Item key={id} {...item} />
         })
       }
@@ -55,4 +34,4 @@ const MyItemsList = () => {
   )
 }
 
-export default MyItemsList
+export default AllItemsList

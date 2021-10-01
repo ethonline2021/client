@@ -26,10 +26,16 @@ const Menu = () => {
   const {deployed} = useContracts()
 
   const items = useMemo(() => {
-    return [{
-      path: '/',
-      link: 'Home',
-    }]
+    return [
+      {
+        path: '/',
+        link: 'Home',
+      },
+      {
+        path: '/items/all',
+        link: 'Explore',
+      },
+    ]
   }, [])
 
   const [menu, setMenu] = useState(items)
@@ -44,7 +50,7 @@ const Menu = () => {
   useEagerConnect()
 
   useEffect(() => {
-    if (deployed && menu.length === 1) {
+    if (deployed && menu.length === items.length) {
       setMenu([...items, {
         path: '/items',
         link: 'My items',

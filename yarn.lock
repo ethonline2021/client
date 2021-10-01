@@ -829,6 +829,15 @@
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.0.6.tgz#023d72a5c4531b4ce204528971700a78a85a0c50"
   integrity sha512-Myxw//kzromB9yWgS8qYGuGVf91oBUUJpNvy5eM50sqvmKLbKjwLxohJnkWGTeeI9v9IBMtPLxz5Gc60FIfvCA==
 
+"@superfluid-finance/js-sdk@^0.5.4":
+  version "0.5.4"
+  resolved "https://registry.yarnpkg.com/@superfluid-finance/js-sdk/-/js-sdk-0.5.4.tgz#ba48f64ae61d3b44a4988b0703a049c51bfcd809"
+  integrity sha512-on7iO+IVISvjcMskNkovoohxVZ4n92HwKFBdEX72NSC3vGhAVqRtvtBG4ZUxauSZD9MPDTVqRLm2GWSJ5qQaZA==
+  dependencies:
+    "@ethersproject/abi" "^5.4.0"
+    "@ethersproject/hash" "^5.4.0"
+    auto-bind "^4.0.0"
+
 "@types/axios@^0.14.0":
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/@types/axios/-/axios-0.14.0.tgz#ec2300fbe7d7dddd7eb9d3abf87999964cafce46"
@@ -1291,6 +1300,11 @@ async-validator@^3.0.3:
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/async-validator/-/async-validator-3.5.2.tgz#68e866a96824e8b2694ff7a831c1a25c44d5e500"
   integrity sha512-8eLCg00W9pIRZSB781UUX/H6Oskmm8xloZfr09lz5bikRpBVDlJ3hRVuxxP1SxcwsEYfJ4IU8Q19Y8/893r3rQ==
+
+auto-bind@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/auto-bind/-/auto-bind-4.0.0.tgz#e3589fc6c2da8f7ca43ba9f84fa52a744fc997fb"
+  integrity sha512-Hdw8qdNiqdJ8LqT0iK0sVzkFbzg6fhnQqqfWhBDxcHZvU75+B+ayzTy8x+k5Ix0Y92XOhOUlx74ps+bA6BeYMQ==
 
 available-typed-arrays@^1.0.5:
   version "1.0.5"
