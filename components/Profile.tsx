@@ -31,7 +31,7 @@ const Profile = ({
         setDescription(desc)
       }
     })()
-  }, [account, main, deployed, username, description, setUsername, setDescription])
+  }, [account, main, deployed, username, description])
 
   const onSend = async (values: any) => {
     if (!main || !deployed) {
@@ -74,6 +74,7 @@ const Profile = ({
       ]}
       onCancel={close}
     >
+      <p>{account}</p>
       <Form
         id="profile-modal-form"
         initialValues={{username, description}}

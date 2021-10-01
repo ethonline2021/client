@@ -1,20 +1,38 @@
+import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 import { Button, Form, Input, Modal } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useContracts } from '../hooks'
 
 const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => void, onComplete: (result: any) => void}) => {
-  const { main } = useContracts()
+  const { main, setDeployed } = useContracts()
+  const [loading, setLoading] = useState(false)
 
   const onSend = async (values: any) => {
-    const transaction = await main.deployUser(values.username, values.description)
-    const rcpt = await transaction.wait(1)
+    setLoading(true)
+    let transaction : TransactionResponse
+    let rcpt : TransactionReceipt
+    try {
+      transaction = await main.deployUser(values.username, values.description)
+      rcpt = await transaction.wait(1)
+    } catch (e) {
+      console.error(e)
+      setLoading(false)
+      return false
+    }
 
     // TODO improve this
-    if (!rcpt.status) {
+    if (rcpt && !rcpt.status) {
       console.error(rcpt)
     }
 
+
+    const [ depl ] = rcpt.events?.filter((x: any) => x.event == "UserDeployed");
+
+    setDeployed(depl.args.contractAddress)
+    console.log('result:', depl)
+
     onComplete(rcpt)
+    setLoading(false)
 
     return rcpt
   }
@@ -27,6 +45,8 @@ const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => v
           key="submit"
           htmlType="submit"
           type="primary"
+          loading={loading}
+          disabled={loading}
         >
           Submit
         </Button>

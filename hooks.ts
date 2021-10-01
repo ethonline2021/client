@@ -5,24 +5,29 @@ import { useWeb3React } from '@web3-react/core'
 import ContractMain from "./contracts/contracts/Main.sol/Main.json"
 
 import { injected } from './connectors'
-import { ContractsContext, IContractsContext } from './providers'
+import { ContractsContext, IContractsContext, useErrors } from './providers'
 
 export const useEagerConnect = () => {
   const { activate, active } = useWeb3React()
+  const {setError, error} = useErrors()
 
   const [tried, setTried] = useState(false)
 
   useEffect(() => {
     injected.isAuthorized().then((isAuthorized: boolean) => {
       if (isAuthorized) {
-        activate(injected, undefined, true).catch(() => {
+        activate(injected, (err) => {
+          if (err.message !== error) {
+            setError(err.message)
+          }
+        }, true).catch(() => {
           setTried(true)
         })
       } else {
         setTried(true)
       }
     })
-  }, [activate])
+  }, [activate, error, setError])
 
   useEffect(() => {
     if (!tried && active) {

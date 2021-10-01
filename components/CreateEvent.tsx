@@ -31,10 +31,8 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
     const preDecimals = await paytoken.decimals()
     const decimals = ethers.BigNumber.from(10).pow(preDecimals)
     const price = ethers.BigNumber.from(item.price).mul(decimals)
-    console.log('address is:', paytoken.address)
 
     const response = await axios.post('/api/nfts/upload', item)
-
 
     let tx = await deployed.deployItem(
       item.title,
@@ -47,8 +45,6 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
     )
 
     const rcpt = await tx.wait(1)
-
-    console.log(rcpt)
 
     setLoading(false)
     close()

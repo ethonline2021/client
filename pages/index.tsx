@@ -13,7 +13,6 @@ import UserContract from '../contracts/contracts/User.sol/User.json'
 import SignUp from '../components/Signup'
 import { useContracts } from '../hooks'
 import { injected } from '../connectors'
-import WalletErrors from '../components/WalletErrors'
 import Profile from '../components/Profile'
 import CreateEvent from '../components/CreateEvent'
 
@@ -30,36 +29,28 @@ const Home: NextPage = () => {
   const [signupModal, setSignupModal] = useState(false)
   const [profileModal, setProfileModal] = useState(false)
   const [eventModal, setEventModal] = useState(false)
-  const [deployedSC, setDeployedSC] = useState(null)
 
   useEffect(() => {
     ;(async () => {
       if (active && main) {
         const deployed = await main.getDeployedUser(account)
-        setDeployedSC(deployed)
 
         if (!/^0x0+0$/.test(deployed)) {
-          const dsc = new ethers.Contract(deployed, UserContract.abi, signer)
-          setDeployed(dsc)
+          setDeployed(deployed)
 
           setContents(<>
             <p>
               You are signed up!
-              <a onClick={() => setProfileModal(true)}>Edit Profile</a>
             </p>
             <p>
               <a onClick={() => setEventModal(true)}>Create event</a>
             </p>
           </>)
         } else {
-          setContents(<a onClick={() => {
-            setSignupModal(true)
-          }}>Sign up</a>)
+          setContents(<p>You should sign-up first</p>)
         }
       } else {
-        setContents(<a onClick={() => {
-          activate(injected)
-        }}>Unlock wallet</a>)
+        setContents(<p>Start by unlocking your wallet</p>)
       }
     })()
   }, [active, main, account, activate, setDeployed, signer])
@@ -74,16 +65,10 @@ const Home: NextPage = () => {
         close={() => setSignupModal(false)}
         onComplete={() => setSignupModal(false)}
       />
-      <Profile
-        visible={profileModal}
-        close={() => setProfileModal(false)}
-        onComplete={() => setProfileModal(false)}
-      />
       <CreateEvent
         visible={eventModal}
         close={() => setEventModal(false)}
       />
-      <WalletErrors />
     </div>
   )
 }

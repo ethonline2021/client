@@ -2,24 +2,37 @@ import { useWeb3React } from "@web3-react/core"
 import * as Antd from "antd"
 import { BasicProps, Header as AntdHeader } from 'antd/lib/layout/layout'
 import { ethers } from "ethers"
-import { useContext, useEffect, useState } from "react"
+import { useRouter } from "next/dist/client/router"
+import Link from 'next/link'
+import { useContext, useEffect, useMemo, useState } from "react"
 import styled from "styled-components"
+
 import { injected } from "../connectors"
 import { useContracts, useEagerConnect } from "../hooks"
 import { useErrors } from "../providers"
+import Wallet from "./Wallet"
 
 const Account = styled.div`
   margin-left: auto;
 `
 
 const AppHeader : React.FunctionComponent<BasicProps> = styled(AntdHeader)`
-  display: flex;
+/*   display: flex; */
 `
 
 const Menu = () => {
-  const {activate, deactivate, account, active, error, connector, library} = useWeb3React()
-  const {main} = useContracts()
-  const {setError} = useErrors()
+  const {connector} = useWeb3React()
+  const {router} = useRouter()
+  const {deployed} = useContracts()
+
+  const items = useMemo(() => {
+    return [{
+      path: '/',
+      link: 'Home',
+    }]
+  }, [])
+
+  const [menu, setMenu] = useState(items)
 
   const [activatingConnector, setActivatingConnector] = useState<any>()
   useEffect(() => {
@@ -28,35 +41,34 @@ const Menu = () => {
     }
   }, [activatingConnector, connector])
 
-  const triedEager = useEagerConnect()
+  useEagerConnect()
 
-  setError('')
-  if (error) {
-    setError(error.message)
-  }
-
-  const onWalletBtnClick = async () => {
-    setActivatingConnector(injected)
-
-    if (active) {
-      return deactivate()
+  useEffect(() => {
+    if (deployed && menu.length === 1) {
+      setMenu([...items, {
+        path: '/items',
+        link: 'My items',
+      }])
     }
-
-    await activate(injected, undefined, true)
-  }
+  }, [deployed, items, menu])
 
   return (
     <AppHeader className="header">
       <div className="logo" />
       <Antd.Menu theme="dark" mode="horizontal" defaultSelectedKeys={["1"]}>
-        <Antd.Menu.Item key="1">Home</Antd.Menu.Item>
-        <Antd.Menu.Item key="2">Creators</Antd.Menu.Item>
+        {
+          menu.map(({path, link}, id) => (
+            <Antd.Menu.Item key={id}>
+              <Link href={path}>
+                <a>{link}</a>
+              </Link>
+            </Antd.Menu.Item>
+          ))
+        }
+        <Antd.Menu.Item key={menu.length} style={{marginLeft: "auto"}}>
+          <Wallet />
+        </Antd.Menu.Item>
       </Antd.Menu>
-      {/* <Account>
-        <Antd.Button onClick={onWalletBtnClick}>
-          {signedUp ? 'Connected to ' + account : 'Wallet Connect'}
-        </Antd.Button>
-      </Account> */}
     </AppHeader>
   )
 }
