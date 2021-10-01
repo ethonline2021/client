@@ -104,21 +104,18 @@ const ItemsView = () => {
 
     const balance = await erc20contract.balanceOf(account)
     console.log('balance:', balance.toString())
-    console.log('rate:', (item.price / 3600 * 24 * 30).toString())
-
-    const approve = await erc20contract.approve(erc20contract.address, item.price)
-
-    // actually wait for it
-    await approve.wait()
-
+    
     const buyer = sf.user({
       address: account,
       token: erc20contract.address,
     })
 
+    const flowRate = Math.floor(item.price / (3600 * 24 * 30));
+    console.log('rate:', flowRate.toString())
+
     await buyer.flow({
       recipient: address,
-      flowRate: (item.price / 3600 * 24 * 30).toString(),
+      flowRate: flowRate.toString(),
     })
 
     setBuying(false)
