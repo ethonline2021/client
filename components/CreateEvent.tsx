@@ -27,7 +27,16 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
 
   const onSubmit = async (item: Item) => {
     setLoading(true)
-    const paytoken = new ethers.Contract(process.env.NEXT_PUBLIC_ERC20_PAYMENTS, Erc20.abi, signer)
+    let paytoken : ethers.Contract
+    try {
+      paytoken = new ethers.Contract(process.env.NEXT_PUBLIC_ERC20_PAYMENTS, Erc20.abi, signer)
+    } catch (e) {
+      console.error('error initializing payments token (fDaix):', e)
+
+      setLoading(false)
+      return false
+    }
+
     const preDecimals = await paytoken.decimals()
     const decimals = ethers.BigNumber.from(10).pow(preDecimals)
     const price = ethers.BigNumber.from(item.price).mul(decimals)

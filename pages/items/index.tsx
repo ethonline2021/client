@@ -47,7 +47,7 @@ const MyItemsList = () => {
   return (
     <Loading loading={loading}>
       {
-        data && data.items.length && data.items.map((item, id) => {
+        data && data.items.length > 0 && data.items.map((item, id) => {
           return <Item key={id} {...item} />
         })
       }

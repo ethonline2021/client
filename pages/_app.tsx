@@ -32,7 +32,13 @@ function MyApp({ Component, pageProps }: AppProps) {
     deployed,
     setDeployed: (contract: string) => {
       if (!/^0x0+0$/.test(contract)) {
-        setDeployed(new ethers.Contract(contract, UserContract.abi, signer))
+        let dpl : ethers.Contract
+        try {
+          dpl = new ethers.Contract(contract, UserContract.abi, signer)
+          setDeployed(dpl)
+        } catch (e) {
+          console.error('error initializing user\'s deployed contract:', e)
+        }
       }
     },
     signer,

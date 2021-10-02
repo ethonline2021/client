@@ -57,7 +57,12 @@ export const useContracts = () : IContractsContext => {
     ;(async () => {
       if (active && !main) {
         const signer = await library.getSigner(account)
-        const scMain = new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_MAIN, ContractMain.abi, signer)
+        let scMain : ethers.Contract
+        try {
+          scMain = new ethers.Contract(process.env.NEXT_PUBLIC_CONTRACT_MAIN, ContractMain.abi, signer)
+        } catch (e) {
+          console.error('error initializing main contract:', e)
+        }
 
         context.setSigner(signer)
         setMain(scMain)
