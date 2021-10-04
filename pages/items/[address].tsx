@@ -1,11 +1,10 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
 import { Button, PageHeader } from "antd"
-import { ethers } from "ethers"
+import { ethers, Contract } from "ethers"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
-import SuperfluidSDK from "@superfluid-finance/js-sdk"
 
 import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
@@ -13,13 +12,15 @@ import { useContracts, useItem } from "../../hooks"
 import { decimal, parseItem } from "../../lib"
 import { Content } from "antd/lib/layout/layout"
 
+const SuperfluidSDK = require("@superfluid-finance/js-sdk")
+
 const ItemsView = () => {
   const router = useRouter()
   const [ realBalance, setRealBalance ] = useState(ethers.BigNumber.from(0))
   const [ price, setPrice ] = useState(0)
   const [ block, setBlock ] = useState(0)
   const [ updating, setUpdating ] = useState(false)
-  const [ contentLoading, setContentLoading ] = useState()
+  const [ contentLoading, setContentLoading ] = useState(false)
   const { deployed } = useContracts()
   const { address } = router.query
   const { account, library } = useWeb3React()
@@ -30,10 +31,10 @@ const ItemsView = () => {
     deposit: string
     owedDeposit: string
   }>()
-  const [ superfluid, setSuperfluid ] = useState()
+  const [ superfluid, setSuperfluid ] = useState<any>()
   const [ decimals, setDecimals ] = useState(0)
-  const [ tokenContract, setTokenContract ] = useState()
-  const [ superTokenContract, setSuperTokenContract ] = useState()
+  const [ tokenContract, setTokenContract ] = useState<Contract | null>()
+  const [ superTokenContract, setSuperTokenContract ] = useState<Contract | null>()
   const { item, loading, itemContract } = useItem(account, address, library)
 
   // init sf, flow & tokens
@@ -43,7 +44,7 @@ const ItemsView = () => {
         const sfVersion = "v1"
         const tokenSymbol = "fDAI"
 
-        let sf : SuperfluidSDK.Framework
+        let sf
         try {
           sf = new SuperfluidSDK.Framework({
             ethers: library,
@@ -99,7 +100,7 @@ const ItemsView = () => {
           const dec = await superTokenContract.decimals()
           setDecimals(dec)
         } catch (e) {
-          console.error('error grabbing decimals:', dec)
+          console.error('error grabbing decimals')
         }
       }
     })()
@@ -133,7 +134,7 @@ const ItemsView = () => {
   // block update event updating balance
   useEffect(() => {
     if (library && !library._events.length && superTokenContract) {
-      library.on('block', async (bh) => {
+      library.on('block', async (bh: any) => {
         setBlock(bh)
         if (updating) {
           return false
@@ -153,7 +154,7 @@ const ItemsView = () => {
   }, [account, address, block, superTokenContract, library, updating])
 
   const purchase = async () => {
-    if (!superfluid) {
+    if (!superfluid || !superTokenContract || !tokenContract) {
       console.error('superfluid not yet initialized')
       return false
     }
@@ -189,7 +190,7 @@ const ItemsView = () => {
       address: account,
       token: superTokenContract.address,
     })
-    const flowRate = Math.floor(item.price / (3600 * 24 * 30))
+    const flowRate = Math.floor(Number(item.price) / (3600 * 24 * 30))
 
     const flow = {
       recipient: address,
@@ -202,7 +203,7 @@ const ItemsView = () => {
   }
 
   const cancel = async () => {
-    if (!superfluid) {
+    if (!superfluid || !superTokenContract || !tokenContract) {
       console.error('superfluid not yet initialized')
       return false
     }
@@ -233,7 +234,7 @@ const ItemsView = () => {
         >
           <Content>
             <p>{item.description}</p>
-            <If condition={deployed}>
+            <If condition={Boolean(deployed)}>
               <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
                 <Then>
                   <p>

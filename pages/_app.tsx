@@ -51,7 +51,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return <>
     <GlobalStyle />
-    <Layout>
+    <Layout style={{ minHeight: '100vh' }}>
       <Web3ReactProvider getLibrary={getLibrary}>
         <ApolloProvider client={client}>
           <ErrorsContext.Provider value={{error, setError}}>
@@ -68,7 +68,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                           </Content>
                         </Layout>
                       </Content>
-                      <Footer style={{ textAlign: "center" }}>Shadowy &amp; Òscar C. &copy;2021</Footer>
+                      <Footer style={{ backgroundColor: "#001529", textAlign: "center", color: "rgba(255, 255, 255, 0.65)" }}>With ❤️ for EthOnline 2021</Footer>
                     </>)
                   }
             </ContractsContext.Provider>
