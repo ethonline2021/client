@@ -29,7 +29,6 @@ const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => v
     const [ depl ] = rcpt.events?.filter((x: any) => x.event == "UserDeployed");
 
     setDeployed(depl.args.contractAddress)
-    console.log('result:', depl)
 
     onComplete(rcpt)
     setLoading(false)

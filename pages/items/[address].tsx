@@ -7,8 +7,8 @@ import { useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
 
-import ERC20Contract from "../../contracts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json"
 import Loading from "../../components/Loading"
+import { useContracts } from "../../hooks"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -17,19 +17,21 @@ const ItemsView = () => {
   const [ block, setBlock ] = useState(0)
   const [ updating, setUpdating ] = useState(false)
   const [ contentLoading, setContentLoading ] = useState()
-  const [ erc20contract, setErc20Contract ] = useState()
+  const {deployed} = useContracts()
   const { address } = router.query
   const { account, library } = useWeb3React()
   const [ buying, setBuying ] = useState(false)
   const [ flow, setFlow ] = useState<{
-    timestamp: Date;
-    flowRate: string;
-    deposit: string;
-    owedDeposit: string;
+    timestamp: Date
+    flowRate: string
+    deposit: string
+    owedDeposit: string
   }>()
   const [ outcome, setOutcome ] = useState(0)
   const [ superfluid, setSuperfluid ] = useState()
   const [ decimals, setDecimals ] = useState(0)
+  const [ tokenContract, setTokenContract ] = useState()
+  const [ superTokenContract, setSuperTokenContract ] = useState()
 
   const ITEM_DETAILS = gql`
     {
@@ -59,26 +61,52 @@ const ItemsView = () => {
     ([item] = data.items)
   }
 
+  // init sf, flow & tokens
   useEffect(() => {
     ;(async () => {
-      if (!superfluid && library && item && item.owner.length && item.owner !== account && erc20contract) {
+      if (!superfluid && library && item && item.owner.length && item.owner !== account) {
+        const sfVersion = "v1"
+        const tokenSymbol = "fDAI"
+
         let sf : SuperfluidSDK.Framework
         try {
           sf = new SuperfluidSDK.Framework({
             ethers: library,
-            tokens: ["fDAI"],
-          });
-          await sf.initialize();
+            tokens: [tokenSymbol],
+          })
+
+          await sf.initialize()
           setSuperfluid(sf)
         } catch (e) {
           console.error('error initializing superfluid:', e)
+        }
+
+        let token : ethers.Contract,
+            superToken : ethers.Contract
+
+        try {
+          const {
+              ISuperToken,
+              TestToken,
+          } = sf.contracts
+
+          const tokenAddress = await sf.resolver.get(`tokens.${tokenSymbol}`)
+          const superTokenAddress = await sf.resolver.get(`supertokens.${sfVersion}.${tokenSymbol}x`)
+
+          token = await TestToken.at(tokenAddress)
+          superToken = await ISuperToken.at(superTokenAddress)
+
+          setTokenContract(token)
+          setSuperTokenContract(superToken)
+        } catch (e) {
+          console.error('error getting token & supertoken info from sf:', e)
         }
 
         try {
           const flow = await sf.cfa?.getFlow({
             receiver: address,
             sender: account,
-            superToken: erc20contract.address,
+            superToken: superToken.address,
           })
           setFlow(flow)
         } catch (e) {
@@ -86,34 +114,29 @@ const ItemsView = () => {
         }
       }
     })()
-  }, [account, address, erc20contract, library, item, superfluid])
+  }, [account, address, library, item, superfluid])
 
+  // grab & set decimals
   useEffect(() => {
     ;(async () => {
-      if (!erc20contract && library) {
-        let contract : ethers.Contract
+      if (!decimals && superTokenContract) {
         try {
-          contract = new ethers.Contract(process.env.NEXT_PUBLIC_ERC20_PAYMENTS, ERC20Contract.abi, library.getSigner(account))
-        } catch (e) {
-          console.error('error initializing payments contract:', e)
-        }
-        setErc20Contract(contract)
-        try {
-          const dec = await contract.decimals()
+          const dec = await superTokenContract.decimals()
           setDecimals(dec)
         } catch (e) {
           console.error('error grabbing decimals:', dec)
         }
       }
     })()
-  }, [account, address, erc20contract, library])
+  }, [decimals, superTokenContract])
 
+  // grab & set balance
   useEffect(() => {
     (async () => {
-      if (erc20contract && !updating && realBalance.isZero() && address && item.owner === account) {
+      if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account) {
         setUpdating(true)
         try {
-          setRealBalance(await erc20contract.balanceOf(address))
+          setRealBalance(await superTokenContract.balanceOf(address))
           setContentLoading(false)
         } catch (e) {
           console.error('error grabbing balance:', e)
@@ -121,20 +144,21 @@ const ItemsView = () => {
         }
       }
     })()
-  }, [address, block, erc20contract, realBalance, updating, account, item])
+  }, [address, block, superTokenContract, realBalance, updating, account, item])
 
+  // grab & set price
   useEffect(() => {
     ;(async () => {
-      if (!price && erc20contract && data) {
-        const decimals = await erc20contract.decimals()
+      if (!price && decimals && data) {
         const p = data.items[0].price
         setPrice(p / Math.pow(10, decimals))
       }
     })();
-  }, [price, erc20contract, data])
+  }, [price, decimals, data])
 
+  // block update event updating balance
   useEffect(() => {
-    if (library && !library._events.length) {
+    if (library && !library._events.length && superTokenContract) {
       library.on('block', async (bh) => {
         setBlock(bh)
         if (updating) {
@@ -142,7 +166,7 @@ const ItemsView = () => {
         }
 
         setUpdating(true)
-        setRealBalance(await erc20contract.balanceOf(address))
+        setRealBalance(await superTokenContract.balanceOf(address))
         setUpdating(false)
       })
     }
@@ -152,7 +176,7 @@ const ItemsView = () => {
         library.removeAllListeners('block')
       }
     }
-  }, [account, address, block, erc20contract, library, updating])
+  }, [account, address, block, superTokenContract, library, updating])
 
   const purchase = async () => {
     if (!superfluid) {
@@ -162,11 +186,32 @@ const ItemsView = () => {
 
     setBuying(true)
 
+    // check for balance & top-up
+    if (Number(await superTokenContract.balanceOf(account)) < Number(item.price)) {
+      console.log('account does not have enough balance')
+      // this should be only with superfluid test tokens
+      if (Number(await tokenContract.balanceOf(account)) < Number(item.price)) {
+        const mint = await tokenContract.mint(account, ethers.utils.parseEther("1000"))
+        // wait for tx
+        await mint.wait()
+      }
+
+      // approve
+      if (Number(await superTokenContract.allowance(account, superTokenContract.address)) < Number(item.price)) {
+        const approve = await superTokenContract.approve(superTokenContract.address, ethers.BigNumber.from(item.price))
+        await approve.wait()
+      }
+
+      // wrap
+      const wrap = await superTokenContract.upgrade(ethers.BigNumber.from(item.price))
+      await wrap.wait()
+    }
+
     const buyer = superfluid.user({
       address: account,
-      token: erc20contract.address,
+      token: superTokenContract.address,
     })
-    const flowRate = Math.floor(item.price / (3600 * 24 * 30));
+    const flowRate = Math.floor(item.price / (3600 * 24 * 30))
 
     const flow = {
       recipient: address,
@@ -188,7 +233,7 @@ const ItemsView = () => {
 
     const buyer = superfluid.user({
       address: account,
-      token: erc20contract.address,
+      token: superTokenContract.address,
     })
 
     const flow = {
@@ -207,7 +252,7 @@ const ItemsView = () => {
       <Loading loading={loading}>
         <h2>{item.title}</h2>
         <p>{item.description}</p>
-        <If condition={account}>
+        <If condition={deployed}>
           <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
             <Then>
               <p>
@@ -227,7 +272,7 @@ const ItemsView = () => {
                 </Then>
                 <Else>
                   <p>
-                    You&apos;re already paying for it, paid already: {/* {decimal(outCome, decimals)} */}
+                    You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
                   </p>
                   <p>
                     <Button
