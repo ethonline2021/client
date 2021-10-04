@@ -171,8 +171,8 @@ const ItemsView = () => {
       }
 
       // approve
-      if (Number(await tokenContract.allowance(account, tokenContract.address)) < Number(item.price)) {
-        const approve = await tokenContract.approve(tokenContract.address, ethers.BigNumber.from(item.price))
+      if (Number(await tokenContract.allowance(account, superTokenContract.address)) < Number(item.price)) {
+        const approve = await tokenContract.approve(superTokenContract.address, ethers.BigNumber.from(item.price))
         await approve.wait()
       }
 
