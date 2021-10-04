@@ -1,6 +1,6 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Button } from "antd"
+import { Button, PageHeader } from "antd"
 import { ethers } from "ethers"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
@@ -9,8 +9,9 @@ import SuperfluidSDK from "@superfluid-finance/js-sdk"
 
 import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
-import { useContracts } from "../../hooks"
+import { useContracts, useItem } from "../../hooks"
 import { decimal, parseItem } from "../../lib"
+import { Content } from "antd/lib/layout/layout"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -33,33 +34,7 @@ const ItemsView = () => {
   const [ decimals, setDecimals ] = useState(0)
   const [ tokenContract, setTokenContract ] = useState()
   const [ superTokenContract, setSuperTokenContract ] = useState()
-  const [ itemContract, setItemContract ] = useState<ethers.Contract>()
-  const [ loading, setLoading ] = useState(false)
-  const [ item, setItem ] = useState({
-    title: '',
-    description: '',
-    amount: 0,
-    owner: '',
-  })
-
-  // set item contract
-  useEffect(() => {
-    if (!itemContract && library && account) {
-      setItemContract(new ethers.Contract(address, ItemContract.abi, library.getSigner(account)))
-    }
-  }, [account, address, itemContract, library])
-
-  // fetch data
-  useEffect(() => {
-    ;(async () => {
-      if (!loading && !item.title.length && itemContract) {
-        setLoading(true)
-        const itm = await itemContract.getDetails()
-        setItem(parseItem(itm))
-        setLoading(false)
-      }
-    })()
-  }, [loading, item, itemContract])
+  const { item, loading, itemContract } = useItem(account, address, library)
 
   // init sf, flow & tokens
   useEffect(() => {
@@ -251,48 +226,53 @@ const ItemsView = () => {
 
   return (
     <div>
-      <p>{address}</p>
       <Loading loading={loading}>
-        <h2>{item.title}</h2>
-        <p>{item.description}</p>
-        <If condition={deployed}>
-          <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
-            <Then>
-              <p>
-                Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
-              </p>
-            </Then>
-            <Else>
-              <If condition={flow?.flowRate === "0"}>
+        <PageHeader
+          title={item.title}
+          onBack={() => history.back()}
+        >
+          <Content>
+            <p>{item.description}</p>
+            <If condition={deployed}>
+              <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
                 <Then>
-                  <Button
-                    disabled={price === 0 || buying}
-                    loading={buying}
-                    onClick={purchase}
-                  >
-                    Buy one for {price}
-                  </Button>
+                  <p>
+                    Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
+                  </p>
                 </Then>
                 <Else>
-                  <If condition={Number(flow?.flowRate) > 0}>
-                    <p>
-                      You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
-                    </p>
-                    <p>
+                  <If condition={flow?.flowRate === "0"}>
+                    <Then>
                       <Button
-                        onClick={cancel}
+                        disabled={price === 0 || buying}
                         loading={buying}
-                        disabled={buying}
+                        onClick={purchase}
                       >
-                        Cancel assistance
+                        Buy one for {price}
                       </Button>
-                    </p>
+                    </Then>
+                    <Else>
+                      <If condition={Number(flow?.flowRate) > 0}>
+                        <p>
+                          You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
+                        </p>
+                        <p>
+                          <Button
+                            onClick={cancel}
+                            loading={buying}
+                            disabled={buying}
+                          >
+                            Cancel assistance
+                          </Button>
+                        </p>
+                      </If>
+                    </Else>
                   </If>
                 </Else>
               </If>
-            </Else>
-          </If>
-        </If>
+            </If>
+          </Content>
+        </PageHeader>
       </Loading>
     </div>
   )

@@ -62,7 +62,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                       <Header />
                       <Content style={{ padding: "0 50px" }}>
                         <Layout style={{ padding: "24px 0" }}>
-                          <Content style={{ padding: "0 24px", minHeight: 280 }}>
+                          <Content style={{ padding: "0 24px", minHeight: '100wh' }}>
                             <Component {...pageProps} />
                             <WalletErrors />
                           </Content>

@@ -3,9 +3,11 @@ import { useState, useEffect, useContext } from 'react'
 import { useWeb3React } from '@web3-react/core'
 
 import ContractMain from "./contracts/contracts/Main.sol/Main.json"
+import ItemContract from "./contracts/contracts/Item.sol/Item.json"
 
 import { injected } from './connectors'
 import { ContractsContext, IContractsContext, useErrors } from './providers'
+import { parseItem } from './lib'
 
 export const useEagerConnect = () => {
   const { activate, active } = useWeb3React()
@@ -73,5 +75,41 @@ export const useContracts = () : IContractsContext => {
   return {
     ...context,
     main,
+  }
+}
+
+export const useItem = (account, address, library) => {
+  const [item, setItem] = useState({
+    title: '',
+    description: '',
+    amount: 0,
+    owner: '',
+  })
+  const [itemContract, setItemContract] = useState<ethers.Contract>()
+  const [loading, setLoading] = useState(false)
+
+  // set item contract
+  useEffect(() => {
+    if (!itemContract && library && account) {
+      setItemContract(new ethers.Contract(address, ItemContract.abi, library.getSigner(account)))
+    }
+  }, [account, address, itemContract, library])
+
+  // fetch data
+  useEffect(() => {
+    ;(async () => {
+      if (!loading && !item.title.length && itemContract) {
+        setLoading(true)
+        const itm = await itemContract.getDetails()
+        setItem(parseItem(itm))
+        setLoading(false)
+      }
+    })()
+  }, [loading, item, itemContract])
+
+  return {
+    loading,
+    item,
+    itemContract,
   }
 }
