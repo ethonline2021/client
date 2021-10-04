@@ -7,8 +7,10 @@ import { useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
 
+import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
 import { useContracts } from "../../hooks"
+import { decimal, parseItem } from "../../lib"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -17,7 +19,7 @@ const ItemsView = () => {
   const [ block, setBlock ] = useState(0)
   const [ updating, setUpdating ] = useState(false)
   const [ contentLoading, setContentLoading ] = useState()
-  const {deployed} = useContracts()
+  const { deployed } = useContracts()
   const { address } = router.query
   const { account, library } = useWeb3React()
   const [ buying, setBuying ] = useState(false)
@@ -27,39 +29,37 @@ const ItemsView = () => {
     deposit: string
     owedDeposit: string
   }>()
-  const [ outcome, setOutcome ] = useState(0)
   const [ superfluid, setSuperfluid ] = useState()
   const [ decimals, setDecimals ] = useState(0)
   const [ tokenContract, setTokenContract ] = useState()
   const [ superTokenContract, setSuperTokenContract ] = useState()
-
-  const ITEM_DETAILS = gql`
-    {
-      items(where: {id: "${address}"}) {
-        owner
-        id
-        title
-        description
-        price
-        amount
-      }
-    }
-  `
-  const { loading, error, data } = useQuery(ITEM_DETAILS)
-
-  const decimal = (num: ethers.BigNumber, dec: number) =>
-    Number(num.toString()) / Math.pow(10, dec)
-
-  let item = {
+  const [ itemContract, setItemContract ] = useState<ethers.Contract>()
+  const [ loading, setLoading ] = useState(false)
+  const [ item, setItem ] = useState({
     title: '',
     description: '',
     amount: 0,
     owner: '',
-  }
+  })
 
-  if (!loading && data && !item.title.length) {
-    ([item] = data.items)
-  }
+  // set item contract
+  useEffect(() => {
+    if (!itemContract && library && account) {
+      setItemContract(new ethers.Contract(address, ItemContract.abi, library.getSigner(account)))
+    }
+  }, [account, address, itemContract, library])
+
+  // fetch data
+  useEffect(() => {
+    ;(async () => {
+      if (!loading && !item.title.length && itemContract) {
+        setLoading(true)
+        const itm = await itemContract.getDetails()
+        setItem(parseItem(itm))
+        setLoading(false)
+      }
+    })()
+  }, [loading, item, itemContract])
 
   // init sf, flow & tokens
   useEffect(() => {
@@ -149,12 +149,11 @@ const ItemsView = () => {
   // grab & set price
   useEffect(() => {
     ;(async () => {
-      if (!price && decimals && data) {
-        const p = data.items[0].price
-        setPrice(p / Math.pow(10, decimals))
+      if (!price && decimals && item) {
+        setPrice(item.price / Math.pow(10, decimals))
       }
     })();
-  }, [price, decimals, data])
+  }, [price, decimals, item])
 
   // block update event updating balance
   useEffect(() => {

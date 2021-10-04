@@ -9,6 +9,7 @@ import {
 } from 'antd'
 import axios from 'axios'
 import { ethers } from 'ethers'
+import { useRouter } from 'next/router'
 import { useState } from 'react'
 
 import Erc20 from '../contracts/contracts/utils/Erc20.sol/Erc20.json'
@@ -22,6 +23,7 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
   const [price, setPrice] = useState(0)
   const [endPaymentDate, setEndPaymentDate] = useState(new Date())
   const [amount, setAmount] = useState(0)
+  const {push} = useRouter()
 
   const {deployed, signer} = useContracts()
 
@@ -55,8 +57,10 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
 
     const rcpt = await tx.wait(1)
 
+    const [{args}] = rcpt.events?.filter((x: any) => x.event === "ItemDeployed")
+
     setLoading(false)
-    close()
+    push(`/items/${args.itemAddress.toLowerCase()}`)
    }
 
   return (

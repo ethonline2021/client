@@ -15,7 +15,7 @@ const Profile = ({
   close: () => void,
   onComplete: (result: any) =>  void,
 }) => {
-  const { main, deployed } = useContracts()
+  const { deployed } = useContracts()
   const { account } = useWeb3React()
   const { setError } = useErrors()
   const [username, setUsername] = useState('')
@@ -24,17 +24,17 @@ const Profile = ({
 
   useEffect(() => {
     ;(async () => {
-      if (main && deployed && !username?.length && !description?.length) {
+      if (deployed && !username?.length && !description?.length) {
         const [, user, desc] = await deployed.getDetails()
 
         setUsername(user)
         setDescription(desc)
       }
     })()
-  }, [account, main, deployed, username, description])
+  }, [account, deployed, username, description])
 
   const onSend = async (values: any) => {
-    if (!main || !deployed) {
+    if (!deployed) {
       console.error('contracts not properly initialized')
       return
     }
