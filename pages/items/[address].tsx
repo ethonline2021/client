@@ -197,14 +197,18 @@ const ItemsView = () => {
       }
 
       // approve
-      if (Number(await superTokenContract.allowance(account, superTokenContract.address)) < Number(item.price)) {
-        const approve = await superTokenContract.approve(superTokenContract.address, ethers.BigNumber.from(item.price))
+      if (Number(await tokenContract.allowance(account, tokenContract.address)) < Number(item.price)) {
+        const approve = await tokenContract.approve(tokenContract.address, ethers.BigNumber.from(item.price))
         await approve.wait()
       }
 
-      // wrap
-      const wrap = await superTokenContract.upgrade(ethers.BigNumber.from(item.price))
-      await wrap.wait()
+      try {
+        // wrap
+        const wrap = await superTokenContract.upgrade(ethers.BigNumber.from(item.price))
+        await wrap.wait()
+      } catch (e) {
+        console.error('wrap failed:', e)
+      }
     }
 
     const buyer = superfluid.user({
@@ -271,18 +275,20 @@ const ItemsView = () => {
                   </Button>
                 </Then>
                 <Else>
-                  <p>
-                    You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
-                  </p>
-                  <p>
-                    <Button
-                      onClick={cancel}
-                      loading={buying}
-                      disabled={buying}
-                    >
-                      Cancel assistance
-                    </Button>
-                  </p>
+                  <If condition={Number(flow?.flowRate) > 0}>
+                    <p>
+                      You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
+                    </p>
+                    <p>
+                      <Button
+                        onClick={cancel}
+                        loading={buying}
+                        disabled={buying}
+                      >
+                        Cancel assistance
+                      </Button>
+                    </p>
+                  </If>
                 </Else>
               </If>
             </Else>

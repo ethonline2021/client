@@ -20,7 +20,7 @@ function getLibrary(provider) {
 }
 
 const client = new ApolloClient({
-  uri: "https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.11",
+  uri: process.env.NEXT_PUBLIC_GRAPH_ENDPOINT,
   cache: new InMemoryCache(),
 })
 
@@ -54,20 +54,25 @@ function MyApp({ Component, pageProps }: AppProps) {
     <Layout>
       <Web3ReactProvider getLibrary={getLibrary}>
         <ApolloProvider client={client}>
-          <ContractsContext.Provider value={contracts}>
-            <ErrorsContext.Provider value={{error, setError}}>
-              <Header />
-              <Content style={{ padding: "0 50px" }}>
-                <Layout className="site-layout-background" style={{ padding: "24px 0" }}>
-                  <Content style={{ padding: "0 24px", minHeight: 280 }}>
-                    <Component {...pageProps} />
-                    <WalletErrors />
-                  </Content>
-                </Layout>
-              </Content>
-              <Footer style={{ textAlign: "center" }}>Shadowy &amp; Òscar C. &copy;2021</Footer>
-            </ErrorsContext.Provider>
-          </ContractsContext.Provider>
+          <ErrorsContext.Provider value={{error, setError}}>
+            <ContractsContext.Provider value={contracts}>
+              {
+                Component.getLayout ?
+                  Component.getLayout(<Component {...pageProps} />) : (<>
+                      <Header />
+                      <Content style={{ padding: "0 50px" }}>
+                        <Layout style={{ padding: "24px 0" }}>
+                          <Content style={{ padding: "0 24px", minHeight: 280 }}>
+                            <Component {...pageProps} />
+                            <WalletErrors />
+                          </Content>
+                        </Layout>
+                      </Content>
+                      <Footer style={{ textAlign: "center" }}>Shadowy &amp; Òscar C. &copy;2021</Footer>
+                    </>)
+                  }
+            </ContractsContext.Provider>
+          </ErrorsContext.Provider>
         </ApolloProvider>
       </Web3ReactProvider>
     </Layout>
