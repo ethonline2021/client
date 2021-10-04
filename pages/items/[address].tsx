@@ -16,6 +16,7 @@ const ItemsView = () => {
   const [ price, setPrice ] = useState(0)
   const [ block, setBlock ] = useState(0)
   const [ updating, setUpdating ] = useState(false)
+  const [ contentLoading, setContentLoading ] = useState()
   const [ erc20contract, setErc20Contract ] = useState()
   const { address } = router.query
   const { account, library } = useWeb3React()
@@ -60,9 +61,7 @@ const ItemsView = () => {
 
   useEffect(() => {
     ;(async () => {
-      console.log(superfluid, library, item, account, erc20contract)
       if (!superfluid && library && item && item.owner.length && item.owner !== account && erc20contract) {
-        console.log('enters')
         let sf : SuperfluidSDK.Framework
         try {
           sf = new SuperfluidSDK.Framework({
@@ -115,6 +114,7 @@ const ItemsView = () => {
         setUpdating(true)
         try {
           setRealBalance(await erc20contract.balanceOf(address))
+          setContentLoading(false)
         } catch (e) {
           console.error('error grabbing balance:', e)
           setUpdating(false)
@@ -155,34 +155,49 @@ const ItemsView = () => {
   }, [account, address, block, erc20contract, library, updating])
 
   const purchase = async () => {
-    setBuying(true)
-
-    let sf : SuperfluidSDK.Framework
-    try {
-      sf = new SuperfluidSDK.Framework({
-        ethers: library,
-        tokens: ["fDAI"],
-      });
-      await sf.initialize();
-    } catch (e) {
-      console.error('error initializing superfluid:', e)
+    if (!superfluid) {
+      console.error('superfluid not yet initialized')
+      return false
     }
 
-    // const balance = await erc20contract.balanceOf(account)
-    // console.log('balance:', balance)
+    setBuying(true)
 
-    const buyer = sf.user({
+    const buyer = superfluid.user({
+      address: account,
+      token: erc20contract.address,
+    })
+    const flowRate = Math.floor(item.price / (3600 * 24 * 30));
+
+    const flow = {
+      recipient: address,
+      flowRate: flowRate.toString(),
+    }
+    await buyer.flow(flow)
+
+    setBuying(false)
+    setFlow(flow)
+  }
+
+  const cancel = async () => {
+    if (!superfluid) {
+      console.error('superfluid not yet initialized')
+      return false
+    }
+
+    setBuying(true)
+
+    const buyer = superfluid.user({
       address: account,
       token: erc20contract.address,
     })
 
-    const flowRate = Math.floor(item.price / (3600 * 24 * 30));
-
-    await buyer.flow({
+    const flow = {
       recipient: address,
-      flowRate: flowRate.toString(),
-    })
+      flowRate: "0",
+    }
+    await buyer.flow(flow)
 
+    setFlow(flow)
     setBuying(false)
   }
 
@@ -196,7 +211,7 @@ const ItemsView = () => {
           <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
             <Then>
               <p>
-                Current income: {decimal(realBalance, decimals)}
+                Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
               </p>
             </Then>
             <Else>
@@ -211,7 +226,18 @@ const ItemsView = () => {
                   </Button>
                 </Then>
                 <Else>
-                  You&apos;re already paying for it, paid already: {/* {decimal(outCome, decimals)} */}
+                  <p>
+                    You&apos;re already paying for it, paid already: {/* {decimal(outCome, decimals)} */}
+                  </p>
+                  <p>
+                    <Button
+                      onClick={cancel}
+                      loading={buying}
+                      disabled={buying}
+                    >
+                      Cancel assistance
+                    </Button>
+                  </p>
                 </Else>
               </If>
             </Else>
