@@ -1,6 +1,7 @@
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
+import { useWeb3React } from "@web3-react/core"
 import { ethers } from "ethers"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export const useSuperfluid = (library) => {
   const [ superfluid, setSuperfluid ] = useState<any>()
@@ -55,5 +56,39 @@ export const useSuperfluid = (library) => {
     superfluid,
     tokenContract,
     superTokenContract,
+  }
+}
+
+
+export const useFlow = (receiver: string) => {
+  const [ flow, setFlow ] = useState<{
+    timestamp: Date
+    flowRate: string
+    deposit: string
+    owedDeposit: string
+  } | undefined>()
+  const { account, library } = useWeb3React()
+  const { superfluid, superTokenContract } = useSuperfluid(library)
+
+  useEffect(() => {
+    ;(async () => {
+      if (superfluid && account && receiver && superTokenContract && !flow) {
+        try {
+          const flow = await superfluid.cfa.getFlow({
+            receiver,
+            sender: account,
+            superToken: superTokenContract.address,
+          })
+          setFlow(flow)
+        } catch (e) {
+          console.error('error grabbing user flow:', e)
+        }
+      }
+    })()
+  }, [flow, superfluid, account, receiver, superTokenContract])
+
+  return {
+    flow,
+    setFlow,
   }
 }

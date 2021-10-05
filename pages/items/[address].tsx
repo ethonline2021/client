@@ -15,6 +15,7 @@ import { Content } from "antd/lib/layout/layout"
 
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
 import { useErrors } from "../../providers"
+import { useFlow, useSuperfluid } from "../../hooks/superfluid"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -26,75 +27,14 @@ const ItemsView = () => {
   const { address } = router.query
   const { account, library } = useWeb3React()
   const [ buying, setBuying ] = useState(false)
-  const [ flow, setFlow ] = useState<{
-    timestamp: Date
-    flowRate: string
-    deposit: string
-    owedDeposit: string
-  }>()
-  const [ superfluid, setSuperfluid ] = useState<any>()
+
   const [ decimals, setDecimals ] = useState(0)
-  const [ tokenContract, setTokenContract ] = useState<Contract | null>()
-  const [ superTokenContract, setSuperTokenContract ] = useState<Contract | null>()
   const { item, loading, itemContract } = useItem(account, address, library)
   const { setError } = useErrors()
   const [ stock, setStock ] = useState(0)
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
-
-  // init sf, flow & tokens
-  useEffect(() => {
-    ;(async () => {
-      if (!superfluid && library && item && item.owner.length && item.owner !== account) {
-        const sfVersion = "v1"
-        const tokenSymbol = "fDAI"
-
-        let sf
-        try {
-          sf = new SuperfluidSDK.Framework({
-            ethers: library,
-            tokens: [tokenSymbol],
-          })
-
-          await sf.initialize()
-          setSuperfluid(sf)
-        } catch (e) {
-          console.error('error initializing superfluid:', e)
-        }
-
-        let token : ethers.Contract,
-            superToken : ethers.Contract
-
-        try {
-          const {
-              ISuperToken,
-              TestToken,
-          } = sf.contracts
-
-          const tokenAddress = await sf.resolver.get(`tokens.${tokenSymbol}`)
-          const superTokenAddress = await sf.resolver.get(`supertokens.${sfVersion}.${tokenSymbol}x`)
-
-          token = await TestToken.at(tokenAddress)
-          superToken = await ISuperToken.at(superTokenAddress)
-
-          setTokenContract(token)
-          setSuperTokenContract(superToken)
-        } catch (e) {
-          console.error('error getting token & supertoken info from sf:', e)
-        }
-
-        try {
-          const flow = await sf.cfa?.getFlow({
-            receiver: address,
-            sender: account,
-            superToken: superToken.address,
-          })
-          setFlow(flow)
-        } catch (e) {
-          console.error('error grabbing user flow:', e)
-        }
-      }
-    })()
-  }, [account, address, library, item, superfluid])
+  const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
+  const { flow, setFlow } = useFlow(address)
 
   // grab & set decimals
   useEffect(() => {
@@ -304,7 +244,7 @@ const ItemsView = () => {
                     <If condition={flow?.flowRate && !ethers.BigNumber.from(flow?.flowRate).isZero()}>
                       <>
                         <p>
-                          You&apos;re already paying for it, total payed: {decimal(paid, decimals)}
+                          You&apos;re already paying for it, total paid: {decimal(paid, decimals)}
                         </p>
                         <If condition={paid.gte(item.price)}>
                           <Then>
