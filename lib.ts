@@ -1,5 +1,5 @@
 export const decimal = (num: ethers.BigNumber, dec: number) =>
-  Number(num.toString()) / Math.pow(10, dec)
+  Math.round(Number(num.toString()) / Math.pow(10, dec) * 100) / 100
 
 export const parseItem = ([owner, title, description, price, token, amount, endPaymentDate, uri, flowRate]) => ({
   owner,

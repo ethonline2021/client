@@ -117,6 +117,7 @@ const ItemsView = () => {
         setUpdating(true)
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
+          setPaid(await itemContract.totalPaid(account))
           setContentLoading(false)
         } catch (e) {
           console.error('error grabbing balance:', e)
@@ -188,17 +189,18 @@ const ItemsView = () => {
     }
 
     // check for balance & top-up
-    if (Number(await superTokenContract.balanceOf(account)) < Number(item.price)) {
-      console.log('account does not have enough balance')
+    const balance = await superTokenContract.balanceOf(account)
+    if (balance.lt(item.price)) {
+      console.log('account does not have enough balance', balance.toString(), item.price.toString())
       // this should be only with superfluid test tokens
-      if (Number(await tokenContract.balanceOf(account)) < Number(item.price)) {
+      if ((await tokenContract.balanceOf(account)).lt(item.price)) {
         const mint = await tokenContract.mint(account, ethers.utils.parseEther("1000"))
         // wait for tx
         await mint.wait()
       }
 
       // approve
-      if (Number(await tokenContract.allowance(account, superTokenContract.address)) < Number(item.price)) {
+      if ((await tokenContract.allowance(account, superTokenContract.address)).lt(item.price)) {
         const approve = await tokenContract.approve(superTokenContract.address, ethers.BigNumber.from(item.price))
         await approve.wait()
       }
@@ -299,12 +301,12 @@ const ItemsView = () => {
                     </Button>
                   </Then>
                   <Else>
-                    <If condition={Number(flow?.flowRate) > 0}>
+                    <If condition={flow?.flowRate && !ethers.BigNumber.from(flow?.flowRate).isZero()}>
                       <>
                         <p>
-                          You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
+                          You&apos;re already paying for it, total payed: {decimal(paid, decimals)}
                         </p>
-                        <If condition={Number(paid) >= Number(item.price)}>
+                        <If condition={paid.gte(item.price)}>
                           <Then>
                             <Button
                               type='primary'
