@@ -1,6 +1,7 @@
 import { TransactionReceipt, TransactionRequest } from '@ethersproject/providers'
 import { useWeb3React } from '@web3-react/core'
 import {
+  Alert,
   Button,
   DatePicker,
   Form,
@@ -11,6 +12,7 @@ import axios from 'axios'
 import { ethers } from 'ethers'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
+import { If } from 'react-if'
 
 import Erc20 from '../contracts/contracts/utils/Erc20.sol/Erc20.json'
 import { useContracts } from '../hooks/contracts'
@@ -27,10 +29,12 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
   const { push } = useRouter()
   const { account, library, chainId } = useWeb3React()
   const { deployed } = useContracts()
+  const [ step, setStep ] = useState<string|undefined>()
 
   const onSubmit = async (item: Item) => {
     setLoading(true)
     let paytoken : ethers.Contract
+    setStep('Initializing')
     try {
       const signer = library.getSigner(account)
       paytoken = new ethers.Contract(networks[chainId].payments, Erc20.abi, signer)
@@ -55,8 +59,10 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
 
     let itemAddress : string
     try {
+      setStep('Creating NFT files')
       const response = await axios.post('/api/nfts/upload', item)
 
+      setStep('Deploying item contract')
       const tx = await deployed.deployItem(
         item.title,
         item.description,
@@ -66,6 +72,7 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
         item.endPaymentDate.unix(),
         response.data.link,
       )
+      setStep('Waiting for transaction confirmation')
       const rcpt = await tx.wait(2)
       const [{args}] = rcpt.events?.filter((x: any) => x.event === "ItemDeployed")
 
@@ -76,6 +83,8 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
 
       return false
     }
+
+    setStep('✔ Done! Sending you there...')
 
     push(`/items/${itemAddress.toLowerCase()}`)
    }
@@ -131,6 +140,9 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
         <Form.Item label="Items amount" name="amount" rules={[{required: true}]}>
           <Input type="number" step="1" min="1" />
         </Form.Item>
+        <If condition={Boolean(step)}>
+          <Alert type="info" message={step} />
+        </If>
       </Form>
     </Modal>
   )

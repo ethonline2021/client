@@ -1,18 +1,24 @@
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
-import { Button, Form, Input, Modal } from 'antd'
+import { Alert, Button, Form, Input, Modal } from 'antd'
 import { useEffect, useState } from 'react'
+import { If } from 'react-if'
+
 import { useContracts } from '../hooks/contracts'
 
 const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => void, onComplete: (result: any) => void}) => {
   const { main, setDeployed } = useContracts()
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<string|undefined>()
 
   const onSend = async (values: any) => {
     setLoading(true)
     let transaction : TransactionResponse
     let rcpt : TransactionReceipt
     try {
+      setStep('Deploying your user contract')
       transaction = await main.deployUser(values.username, values.description)
+
+      setStep('Waiting for transaction confirmation')
       rcpt = await transaction.wait(1)
     } catch (e) {
       console.error(e)
@@ -59,6 +65,9 @@ const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => v
         <Form.Item label="Description" name="description">
           <Input />
         </Form.Item>
+        <If condition={Boolean(step)}>
+          <Alert type="info" message={step} />
+        </If>
       </Form>
     </Modal>
   )

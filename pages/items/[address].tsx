@@ -39,6 +39,7 @@ const ItemsView = () => {
   const { item, loading, itemContract } = useItem(account, address, library)
   const { setError } = useErrors()
   const [ stock, setStock ] = useState(0)
+  const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
 
   // init sf, flow & tokens
   useEffect(() => {
@@ -146,7 +147,7 @@ const ItemsView = () => {
 
   // block update event updating balance
   useEffect(() => {
-    if (library && !library._events.length && superTokenContract) {
+    if (library && !library._events.length && superTokenContract && decimals) {
       library.on('block', async (bh: any) => {
         setBlock(bh)
         if (updating) {
@@ -154,6 +155,7 @@ const ItemsView = () => {
         }
 
         setUpdating(true)
+        setPaid(await itemContract.totalPaid(account))
         setStock(Number(await itemContract.availableAmount()))
         setRealBalance(await superTokenContract.balanceOf(address))
         setUpdating(false)
@@ -165,7 +167,7 @@ const ItemsView = () => {
         library.removeAllListeners('block')
       }
     }
-  }, [account, address, block, superTokenContract, library, updating, itemContract])
+  }, [account, address, block, superTokenContract, library, updating, itemContract, decimals])
 
   const purchase = async () => {
     if (!superfluid || !superTokenContract || !tokenContract) {
@@ -219,8 +221,9 @@ const ItemsView = () => {
 
     const flow = {
       recipient: address,
-      flowRate: item.flowRate,
+      flowRate: item.flowRate.toString(),
     }
+
     try {
       await buyer.flow(flow)
     } catch (e) {
@@ -257,6 +260,18 @@ const ItemsView = () => {
     setBuying(false)
   }
 
+  const claim = async () => {
+    if (!itemContract) {
+      console.error('item contract not loaded :\\')
+
+      return false
+    }
+
+    setBuying(true)
+    console.log('claim result:', await itemContract.claim(account))
+    setBuying(false)
+  }
+
   return (
     <div>
       <Loading loading={loading}>
@@ -285,18 +300,30 @@ const ItemsView = () => {
                   </Then>
                   <Else>
                     <If condition={Number(flow?.flowRate) > 0}>
-                      <p>
-                        You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
-                      </p>
-                      <p>
-                        <Button
-                          onClick={cancel}
-                          loading={buying}
-                          disabled={buying}
-                        >
-                          Cancel assistance
-                        </Button>
-                      </p>
+                      <>
+                        <p>
+                          You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
+                        </p>
+                        <If condition={Number(paid) >= Number(item.price)}>
+                          <Then>
+                            <Button
+                              type='primary'
+                              onClick={claim}
+                            >
+                              Claim
+                            </Button>
+                          </Then>
+                          <Else>
+                            <Button
+                              onClick={cancel}
+                              loading={buying}
+                              disabled={buying}
+                            >
+                              Cancel assistance
+                            </Button>
+                          </Else>
+                        </If>
+                      </>
                     </If>
                   </Else>
                 </If>
