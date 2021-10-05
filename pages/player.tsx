@@ -23,7 +23,7 @@ const Home: NextPage = () => {
   const videoEl = useRef(null)
   const stream = useRef(null)
   const [log, setLog] = useState(null)
-  const [key, setKey] = useState('m43e-kmg0-uhgs-j9pl')
+  const [key, setKey] = useState('47df-j5cn-vdsb-3w1f')
   const [status, setStatus] = useState(null)
 
   useEffect(() => {

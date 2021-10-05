@@ -24,7 +24,7 @@ const Loading = ({loading, children} : {loading: boolean, children: ReactNode}) 
     }
 
     > div {
-      display: inline-block;
+      display: flex;
     }
   `
 
