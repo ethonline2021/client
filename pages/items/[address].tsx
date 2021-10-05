@@ -109,7 +109,7 @@ const ItemsView = () => {
     })()
   }, [decimals, superTokenContract])
 
-  // grab & set balance
+  // grab and set balance & stock
   useEffect(() => {
     (async () => {
       if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account && itemContract) {
@@ -216,13 +216,10 @@ const ItemsView = () => {
     })
 
     const todate = item.endPaymentDate.getTime()
-    const flowRate = Math.floor(
-      Number(item.price) / (3600 * 24 * ((todate - Date.now()) / (1000 * 3600 * 24)))
-    )
 
     const flow = {
       recipient: address,
-      flowRate: flowRate.toString(),
+      flowRate: item.flowRate,
     }
     try {
       await buyer.flow(flow)
