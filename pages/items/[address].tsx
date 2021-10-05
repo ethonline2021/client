@@ -14,6 +14,7 @@ import { decimal, parseItem } from "../../lib"
 import { Content } from "antd/lib/layout/layout"
 
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
+import { useErrors } from "../../providers"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -36,6 +37,8 @@ const ItemsView = () => {
   const [ tokenContract, setTokenContract ] = useState<Contract | null>()
   const [ superTokenContract, setSuperTokenContract ] = useState<Contract | null>()
   const { item, loading, itemContract } = useItem(account, address, library)
+  const { setError } = useErrors()
+  const [ stock, setStock ] = useState(0)
 
   // init sf, flow & tokens
   useEffect(() => {
@@ -109,7 +112,7 @@ const ItemsView = () => {
   // grab & set balance
   useEffect(() => {
     (async () => {
-      if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account) {
+      if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account && itemContract) {
         setUpdating(true)
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
@@ -117,10 +120,20 @@ const ItemsView = () => {
         } catch (e) {
           console.error('error grabbing balance:', e)
           setUpdating(false)
+
+          return
         }
+
+        try {
+          setStock(Number(await itemContract.availableAmount()))
+        } catch (e) {
+          console.error('error grabbing available slots:', e)
+        }
+
+        setUpdating(false)
       }
     })()
-  }, [address, block, superTokenContract, realBalance, updating, account, item])
+  }, [address, block, superTokenContract, realBalance, updating, account, item, itemContract])
 
   // grab & set price
   useEffect(() => {
@@ -141,6 +154,7 @@ const ItemsView = () => {
         }
 
         setUpdating(true)
+        setStock(Number(await itemContract.availableAmount()))
         setRealBalance(await superTokenContract.balanceOf(address))
         setUpdating(false)
       })
@@ -151,7 +165,7 @@ const ItemsView = () => {
         library.removeAllListeners('block')
       }
     }
-  }, [account, address, block, superTokenContract, library, updating])
+  }, [account, address, block, superTokenContract, library, updating, itemContract])
 
   const purchase = async () => {
     if (!superfluid || !superTokenContract || !tokenContract) {
@@ -160,6 +174,17 @@ const ItemsView = () => {
     }
 
     setBuying(true)
+
+    if (!Number(await itemContract.availableAmount())) {
+      const err = 'no items available for purchase'
+
+      console.error(err)
+      setError(err)
+      setBuying(false)
+
+      return false
+    }
+
     // check for balance & top-up
     if (Number(await superTokenContract.balanceOf(account)) < Number(item.price)) {
       console.log('account does not have enough balance')
@@ -254,11 +279,11 @@ const ItemsView = () => {
                 <If condition={flow?.flowRate === "0"}>
                   <Then>
                     <Button
-                      disabled={price === 0 || buying}
+                      disabled={price === 0 || buying || !stock}
                       loading={buying}
                       onClick={purchase}
                     >
-                      Buy one for {price}
+                      Buy one for {price} ({stock.toString()} left)
                     </Button>
                   </Then>
                   <Else>
