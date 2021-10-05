@@ -8,6 +8,6 @@ export const parseItem = ([owner, title, description, price, token, amount, endP
   price,
   token,
   amount,
-  endPaymentDate,
+  endPaymentDate: new Date(Number(endPaymentDate) * 1000),
   uri,
 })

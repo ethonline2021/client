@@ -47,7 +47,8 @@ export const useItem = (account, address, library) => {
     description: '',
     amount: 0,
     owner: '',
-    price: ethers.BigNumber.from(0)
+    price: ethers.BigNumber.from(0),
+    endPaymnentDate: new Date(),
   })
   const [itemContract, setItemContract] = useState<ethers.Contract>()
   const [loading, setLoading] = useState(false)

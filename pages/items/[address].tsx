@@ -160,7 +160,6 @@ const ItemsView = () => {
     }
 
     setBuying(true)
-
     // check for balance & top-up
     if (Number(await superTokenContract.balanceOf(account)) < Number(item.price)) {
       console.log('account does not have enough balance')
@@ -190,13 +189,24 @@ const ItemsView = () => {
       address: account,
       token: superTokenContract.address,
     })
-    const flowRate = Math.floor(Number(item.price) / (3600 * 24 * 30))
+
+    const todate = item.endPaymentDate.getTime()
+    const flowRate = Math.floor(
+      Number(item.price) / (3600 * 24 * ((todate - Date.now()) / (1000 * 3600 * 24)))
+    )
 
     const flow = {
       recipient: address,
       flowRate: flowRate.toString(),
     }
-    await buyer.flow(flow)
+    try {
+      await buyer.flow(flow)
+    } catch (e) {
+      console.error('error creating flow:', flow, e)
+      setBuying(false)
+
+      return
+    }
 
     setBuying(false)
     setFlow(flow)
