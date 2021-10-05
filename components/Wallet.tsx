@@ -12,8 +12,8 @@ import Profile from "./Profile"
 const Wallet = () => {
   const { account: loggedAccount, activate, active, connector, library } = useWeb3React()
   const { main, signer, setDeployed, deployed, account, setAccount } = useContracts()
-  const [signupModal, setSignupModal] = useState(false)
-  const [profileModal, setProfileModal] = useState(false)
+  const [ signupModal, setSignupModal ] = useState(false)
+  const [ profileModal, setProfileModal ] = useState(false)
 
   useEagerConnect()
 
