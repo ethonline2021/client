@@ -8,7 +8,8 @@ import { useContext, useEffect, useMemo, useState } from "react"
 import styled from "styled-components"
 
 import { injected } from "../connectors"
-import { useContracts, useEagerConnect } from "../hooks"
+import { useContracts } from "../hooks/contracts"
+import { useEagerConnect } from "../hooks"
 import { useErrors } from "../providers"
 import Wallet from "./Wallet"
 
@@ -21,9 +22,9 @@ const AppHeader : React.FunctionComponent<BasicProps> = styled(AntdHeader)`
 `
 
 const Menu = () => {
-  const {connector} = useWeb3React()
-  const {router} = useRouter()
-  const {deployed} = useContracts()
+  const { connector } = useWeb3React()
+  const { route } = useRouter()
+  const { deployed } = useContracts()
 
   const items = useMemo(() => {
     return [
@@ -61,7 +62,7 @@ const Menu = () => {
   return (
     <AppHeader className="header">
       <div className="logo" />
-      <Antd.Menu theme="dark" mode="horizontal" defaultSelectedKeys={["1"]}>
+      <Antd.Menu theme="dark" mode="horizontal" selectedKeys={[items.findIndex(({path}) => path === route).toString()]}>
         {
           menu.map(({path, link}, id) => (
             <Antd.Menu.Item key={id}>

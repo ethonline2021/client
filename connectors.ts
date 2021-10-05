@@ -1,9 +1,6 @@
 import { InjectedConnector } from '@web3-react/injected-connector'
+import {networkIds} from './networks'
 
 export const injected = new InjectedConnector({
-  supportedChainIds: [
-    4, // polygon
-    80001, // mumbai
-    31337, // hardhat
-  ],
+  supportedChainIds: networkIds(),
 })

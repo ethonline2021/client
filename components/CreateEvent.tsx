@@ -13,25 +13,27 @@ import { useRouter } from 'next/router'
 import { useState } from 'react'
 
 import Erc20 from '../contracts/contracts/utils/Erc20.sol/Erc20.json'
-import { useContracts } from '../hooks'
+import { useContracts } from '../hooks/contracts'
+import networks from '../networks'
 import { Item } from '../types'
 
 const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) => {
-  const [loading, setLoading] = useState(false)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [price, setPrice] = useState(0)
-  const [endPaymentDate, setEndPaymentDate] = useState(new Date())
-  const [amount, setAmount] = useState(0)
-  const {push} = useRouter()
-
-  const {deployed, signer} = useContracts()
+  const [ loading, setLoading ] = useState(false)
+  const [ title, setTitle ] = useState('')
+  const [ description, setDescription ] = useState('')
+  const [ price, setPrice ] = useState(0)
+  const [ endPaymentDate, setEndPaymentDate ] = useState(new Date())
+  const [ amount, setAmount ] = useState(0)
+  const { push } = useRouter()
+  const { account, library, chainId } = useWeb3React()
+  const { deployed } = useContracts()
 
   const onSubmit = async (item: Item) => {
     setLoading(true)
     let paytoken : ethers.Contract
     try {
-      paytoken = new ethers.Contract(process.env.NEXT_PUBLIC_ERC20_PAYMENTS, Erc20.abi, signer)
+      const signer = library.getSigner(account)
+      paytoken = new ethers.Contract(networks[chainId].payments, Erc20.abi, signer)
     } catch (e) {
       console.error('error initializing payments token (fDaix):', e)
 
@@ -39,28 +41,43 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
       return false
     }
 
-    const preDecimals = await paytoken.decimals()
-    const decimals = ethers.BigNumber.from(10).pow(preDecimals)
-    const price = ethers.BigNumber.from(item.price).mul(decimals)
+    let price = ethers.BigNumber.from(0)
+    try {
+      const preDecimals = await paytoken.decimals()
+      const decimals = ethers.BigNumber.from(10).pow(preDecimals)
+      price = ethers.BigNumber.from(item.price).mul(decimals)
+    } catch (e) {
+      console.error('error grabbing decimals', e)
 
-    const response = await axios.post('/api/nfts/upload', item)
+      setLoading(false)
+      return false
+    }
 
-    let tx = await deployed.deployItem(
-      item.title,
-      item.description,
-      price,
-      paytoken.address,
-      Math.floor(item.amount),
-      item.endPaymentDate.unix(),
-      response.data.link,
-    )
+    let itemAddress : string
+    try {
+      const response = await axios.post('/api/nfts/upload', item)
 
-    const rcpt = await tx.wait(1)
+      const tx = await deployed.deployItem(
+        item.title,
+        item.description,
+        price,
+        paytoken.address,
+        Math.floor(item.amount),
+        item.endPaymentDate.unix(),
+        response.data.link,
+      )
+      const rcpt = await tx.wait(1)
+      const [{args}] = rcpt.events?.filter((x: any) => x.event === "ItemDeployed")
 
-    const [{args}] = rcpt.events?.filter((x: any) => x.event === "ItemDeployed")
+      itemAddress = args.itemAddress
+    } catch (e) {
+      console.error('error deploying item:', e)
+      setLoading(false)
 
-    setLoading(false)
-    push(`/items/${args.itemAddress.toLowerCase()}`)
+      return false
+    }
+
+    push(`/items/${itemAddress.toLowerCase()}`)
    }
 
   return (

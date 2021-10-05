@@ -4,7 +4,8 @@ import Link from 'next/link'
 
 import { injected } from "../connectors"
 
-import { useContracts, useEagerConnect } from "../hooks"
+import { useContracts } from "../hooks/contracts"
+import { useEagerConnect } from "../hooks"
 import SignUp from "./Signup"
 import Profile from "./Profile"
 

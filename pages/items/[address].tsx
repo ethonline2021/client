@@ -8,11 +8,11 @@ import { Else, If, Then } from "react-if"
 
 import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
-import { useContracts, useItem } from "../../hooks"
+import { useContracts, useItem } from "../../hooks/contracts"
 import { decimal, parseItem } from "../../lib"
 import { Content } from "antd/lib/layout/layout"
 
-const SuperfluidSDK = require("@superfluid-finance/js-sdk")
+import SuperfluidSDK from "@superfluid-finance/js-sdk"
 
 const ItemsView = () => {
   const router = useRouter()

@@ -9,7 +9,7 @@ import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 
 import SignUp from '../components/Signup'
-import { useContracts } from '../hooks'
+import { useContracts } from '../hooks/contracts'
 import { injected } from '../connectors'
 import WalletErrors from '../components/WalletErrors'
 

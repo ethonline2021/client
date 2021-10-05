@@ -1,13 +1,15 @@
+import { useWeb3React } from "@web3-react/core"
 import { useErrors } from "../providers"
 
 const WalletErrors = () => {
-  const {error} = useErrors()
+  const { error: walletError } = useErrors()
+  const { error } = useWeb3React()
 
-  if (!error) {
+  if (!error && !walletError) {
     return null
   }
 
-  return <p style={{color: 'red'}}>{error}</p>
+  return <p style={{color: 'red'}}>{error || walletError}</p>
 }
 
 export default WalletErrors

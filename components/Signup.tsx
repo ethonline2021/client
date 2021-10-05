@@ -1,7 +1,7 @@
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 import { Button, Form, Input, Modal } from 'antd'
 import { useEffect, useState } from 'react'
-import { useContracts } from '../hooks'
+import { useContracts } from '../hooks/contracts'
 
 const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => void, onComplete: (result: any) => void}) => {
   const { main, setDeployed } = useContracts()

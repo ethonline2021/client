@@ -12,6 +12,9 @@ export interface IContractsContext {
   setSigner: Dispatch<SetStateAction>,
   account: string,
   setAccount: Dispatch<SetStateAction>,
+  graph: string,
+  setGraph: Dispatch<SetStateAction>,
+  chainId: number,
 }
 
 export const ContractsContext = React.createContext<Partial<IContractsContext>>({})

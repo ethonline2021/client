@@ -3,7 +3,7 @@ import { Button, Form, Input, Modal } from 'antd'
 import { ethers } from 'ethers'
 import {TransactionReceipt} from '@ethersproject/abstract-provider'
 import { useEffect, useState } from 'react'
-import { useContracts } from '../hooks'
+import { useContracts } from '../hooks/contracts'
 import { useErrors } from '../providers'
 
 const Profile = ({
