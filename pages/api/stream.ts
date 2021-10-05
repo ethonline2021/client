@@ -27,6 +27,8 @@ export default async function handler(
     return
   }
 
+  let result : any
+
   let stream : AxiosResponse
   try {
     stream = await livepeer.get('/stream', {
@@ -57,13 +59,14 @@ export default async function handler(
           height: 720,
         }]
       })
+      result = stream.data
     } catch (e) {
       res.status(500).json(e)
       return
     }
+  } else {
+    result = stream.data.pop()
   }
-
-  const [result] = stream.data
 
   const response = {
     rtmp: `rtmp://rtmp.livepeer.com/live/${result.streamKey}`,

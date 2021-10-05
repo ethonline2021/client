@@ -31,7 +31,7 @@ export default async function handler(
 
   const files = []
 
-  for (let i = 0; i <= amount; i++) {
+  for (let i = 0; i < amount; i++) {
     const nft = {
       id: i,
       ...nftData(req.body),

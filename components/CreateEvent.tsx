@@ -66,7 +66,7 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
         item.endPaymentDate.unix(),
         response.data.link,
       )
-      const rcpt = await tx.wait(1)
+      const rcpt = await tx.wait(2)
       const [{args}] = rcpt.events?.filter((x: any) => x.event === "ItemDeployed")
 
       itemAddress = args.itemAddress

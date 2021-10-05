@@ -25,6 +25,7 @@ const Loading = ({loading, children} : {loading: boolean, children: ReactNode}) 
 
     > div {
       display: flex;
+      flex-direction: column;
     }
   `
 
