@@ -21,7 +21,6 @@ const ItemsView = () => {
   const [ block, setBlock ] = useState(0)
   const [ updating, setUpdating ] = useState(false)
   const [ contentLoading, setContentLoading ] = useState(false)
-  const { deployed } = useContracts()
   const { address } = router.query
   const { account, library } = useWeb3React()
   const [ buying, setBuying ] = useState(false)
@@ -234,43 +233,41 @@ const ItemsView = () => {
         >
           <Content>
             <p>{item.description}</p>
-            <If condition={Boolean(deployed)}>
-              <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
-                <Then>
-                  <p>
-                    Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
-                  </p>
-                </Then>
-                <Else>
-                  <If condition={flow?.flowRate === "0"}>
-                    <Then>
-                      <Button
-                        disabled={price === 0 || buying}
-                        loading={buying}
-                        onClick={purchase}
-                      >
-                        Buy one for {price}
-                      </Button>
-                    </Then>
-                    <Else>
-                      <If condition={Number(flow?.flowRate) > 0}>
-                        <p>
-                          You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
-                        </p>
-                        <p>
-                          <Button
-                            onClick={cancel}
-                            loading={buying}
-                            disabled={buying}
-                          >
-                            Cancel assistance
-                          </Button>
-                        </p>
-                      </If>
-                    </Else>
-                  </If>
-                </Else>
-              </If>
+            <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
+              <Then>
+                <p>
+                  Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
+                </p>
+              </Then>
+              <Else>
+                <If condition={flow?.flowRate === "0"}>
+                  <Then>
+                    <Button
+                      disabled={price === 0 || buying}
+                      loading={buying}
+                      onClick={purchase}
+                    >
+                      Buy one for {price}
+                    </Button>
+                  </Then>
+                  <Else>
+                    <If condition={Number(flow?.flowRate) > 0}>
+                      <p>
+                        You&apos;re already paying for it, payment flowrate/s: {flow && flow.flowRate && decimal(flow.flowRate, decimals)}
+                      </p>
+                      <p>
+                        <Button
+                          onClick={cancel}
+                          loading={buying}
+                          disabled={buying}
+                        >
+                          Cancel assistance
+                        </Button>
+                      </p>
+                    </If>
+                  </Else>
+                </If>
+              </Else>
             </If>
           </Content>
         </PageHeader>
