@@ -34,7 +34,7 @@ const ItemsView = () => {
   const [ stock, setStock ] = useState(0)
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
   const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
-  const { flow, setFlow } = useFlow(address)
+  const { flow, setFlow, loading: loadingFlow } = useFlow(address)
 
   // grab & set decimals
   useEffect(() => {
@@ -230,7 +230,7 @@ const ItemsView = () => {
                 </p>
               </Then>
               <Else>
-                <If condition={flow?.flowRate === "0"}>
+                <If condition={!loadingFlow && flow?.flowRate === "0"}>
                   <Then>
                     <Button
                       disabled={price === 0 || buying || !stock}

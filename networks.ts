@@ -25,14 +25,13 @@ const networks : Networks = {
   80001: {
     key: 'mumbai',
     title: 'Mumbai testnet',
-    main: '0x71CD0606E498ab4469851244b07EF37CD82F898E',
+    main: '0x46F08EEB89749cB802Bc7130C2063fbFd66B6912',
     payments: '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.13',
+    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.14',
   },
 }
 
 export const networkIds = () =>
   Object.keys(networks).map((key) => Number(key))
-
 
 export default networks

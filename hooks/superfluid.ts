@@ -61,6 +61,7 @@ export const useSuperfluid = (library) => {
 
 
 export const useFlow = (receiver: string) => {
+  const [ loading, setLoading ] = useState<boolean>(false)
   const [ flow, setFlow ] = useState<{
     timestamp: Date
     flowRate: string
@@ -72,7 +73,8 @@ export const useFlow = (receiver: string) => {
 
   useEffect(() => {
     ;(async () => {
-      if (superfluid && account && receiver && superTokenContract && !flow) {
+      if (superfluid && account && receiver && superTokenContract && !flow && !loading) {
+        setLoading(true)
         try {
           const flow = await superfluid.cfa.getFlow({
             receiver,
@@ -83,9 +85,10 @@ export const useFlow = (receiver: string) => {
         } catch (e) {
           console.error('error grabbing user flow:', e)
         }
+        setLoading(false)
       }
     })()
-  }, [flow, superfluid, account, receiver, superTokenContract])
+  }, [flow, superfluid, account, receiver, superTokenContract, loading])
 
   return {
     flow,
