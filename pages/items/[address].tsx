@@ -16,7 +16,7 @@ import { Content } from "antd/lib/layout/layout"
 
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
 import { useErrors } from "../../providers"
-import { useFlow, useSuperfluid } from "../../hooks/superfluid"
+import { useFlow, useGraphFlow, useSuperfluid } from "../../hooks/superfluid"
 import styled from "styled-components"
 
 const ItemsView = () => {
@@ -36,9 +36,10 @@ const ItemsView = () => {
   const [ stock, setStock ] = useState(0)
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
   const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
-  const { flow, setFlow, loading: loadingFlow } = useFlow(address)
+  const {flow, setFlow, loading: loadingFlow} = useGraphFlow(address)
   const [ status, setStatus ] = useState<string|undefined>()
   const [ symbol, setSymbol ] = useState<string|undefined>()
+  const [ hasNft, setHasNft ] = useState<boolean>(false)
 
   // grab & set decimals
   useEffect(() => {
@@ -56,13 +57,12 @@ const ItemsView = () => {
 
   // grab and set balance & stock
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account && itemContract) {
         setUpdating(true)
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
           setPaid(await itemContract.totalPaid(account))
-          console.log('name:', await superTokenContract.name())
           setContentLoading(false)
         } catch (e) {
           console.error('error grabbing balance:', e)
@@ -82,7 +82,7 @@ const ItemsView = () => {
     })()
   }, [address, block, superTokenContract, realBalance, updating, account, item, itemContract])
 
-  // grab & set price
+  // set price
   useEffect(() => {
     ;(async () => {
       if (!price && decimals && item) {
@@ -91,14 +91,38 @@ const ItemsView = () => {
     })();
   }, [price, decimals, item])
 
+  // grab nft amount
+  useEffect(() => {
+    ;(async () => {
+      if (!item || !flow || !itemContract || !account) {
+        return
+      }
+
+      if (flow.status !== 'Finished') {
+        return
+      }
+
+      let nftamount : ethers.BigNumber = ethers.BigNumber.from(0)
+      try {
+        nftamount = await itemContract.balanceOf(account, flow.nftId)
+      } catch (e)  {
+        console.error('error grabbing nft amount:', e)
+        return
+      }
+
+      setHasNft(Boolean(nftamount))
+    })()
+
+  }, [item, flow, itemContract, account])
+
   // grab & set symbol
   useEffect(() => {
     ;(async () => {
-      if (!symbol && superTokenContract) {
-        setSymbol(await superTokenContract.symbol())
+      if (!symbol && tokenContract) {
+        setSymbol(await tokenContract.symbol())
       }
     })(symbol)
-  }, [superTokenContract, symbol])
+  }, [tokenContract, symbol])
 
   // block update event updating balance
   useEffect(() => {
@@ -189,16 +213,17 @@ const ItemsView = () => {
 
     const todate = item.endPaymentDate.getTime()
 
-    const flow = {
+    const fl = {
       recipient: address,
       flowRate: flowRate.toString(),
+      status: 'Started',
     }
 
     try {
       setStatus('initializing flow')
-      await buyer.flow(flow)
+      await buyer.flow(fl)
     } catch (e) {
-      console.error('error creating flow:', flow, e)
+      console.error('error creating flow:', fl, e)
       setBuying(false)
 
       return
@@ -206,7 +231,7 @@ const ItemsView = () => {
 
     setStatus('done')
     setBuying(false)
-    setFlow(flow)
+    setFlow(fl)
     setTimeout(() => {
       setStatus()
     }, 3000)
@@ -225,13 +250,14 @@ const ItemsView = () => {
       token: superTokenContract.address,
     })
 
-    const flow = {
+    const fl = {
       recipient: address,
-      flowRate: "0",
+      flowRate: '0',
+      status: 'Cancelled?',
     }
-    await buyer.flow(flow)
+    await buyer.flow(fl)
 
-    setFlow(flow)
+    setFlow(fl)
     setBuying(false)
   }
 
@@ -243,7 +269,22 @@ const ItemsView = () => {
     }
 
     setBuying(true)
-    console.log('claim result:', await itemContract.claim(account))
+    const claim = await itemContract.claim(account)
+    await claim.wait()
+    setBuying(false)
+  }
+
+  const withdraw = async () => {
+    if (!itemContract) {
+      console.error('item contract not loaded :\\')
+
+      return false
+    }
+
+    setBuying(true)
+    const withdraw = await itemContract.withdrawEth(account)
+    const waitres = await withdraw.wait()
+    console.log('resulting waitres object:', waitres)
     setBuying(false)
   }
 
@@ -264,10 +305,20 @@ const ItemsView = () => {
                 <p>
                   Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
                 </p>
+                <Buttons>
+                  <Button
+                    onClick={withdraw}
+                    loading={buying}
+                    disabled={buying}
+                    type='primary'
+                  >
+                    Withdraw {symbol}
+                  </Button>
+                </Buttons>
               </Then>
               <Else>
                 <Buttons>
-                  <If condition={!loadingFlow && flow?.flowRate === "0"}>
+                  <If condition={!loadingFlow && (!flow || (flow && !flow.status))}>
                     <Then>
                       <Button
                         disabled={price === 0 || buying || !stock}
@@ -278,7 +329,7 @@ const ItemsView = () => {
                       </Button>
                     </Then>
                     <Else>
-                      <If condition={flow?.flowRate && !ethers.BigNumber.from(flow?.flowRate).isZero()}>
+                      <If condition={flow && flow?.status === 'Started'}>
                         <Then>
                           <If condition={paid.gte(item.price)}>
                             <Then>
@@ -299,8 +350,13 @@ const ItemsView = () => {
                               </Button>
                             </Else>
                           </If>
-                          <InfoTag color='green'>Paid {decimal(paid, decimals)} already</InfoTag>
+                          <InfoTag color='green'>Paid {decimal(paid, decimals)}{symbol} already (out of {price}{symbol})</InfoTag>
                         </Then>
+                        <Else>
+                          <If condition={flow && flow.status === 'Finished' && hasNft}>
+                            <p>You already purchased and claimed this 😊</p>
+                          </If>
+                        </Else>
                       </If>
                     </Else>
                   </If>

@@ -1,3 +1,4 @@
+import { useQuery, gql } from "@apollo/client"
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
 import { useWeb3React } from "@web3-react/core"
 import { ethers } from "ethers"
@@ -91,6 +92,49 @@ export const useFlow = (receiver: string) => {
   }, [flow, superfluid, account, receiver, superTokenContract, loading])
 
   return {
+    flow,
+    setFlow,
+  }
+}
+
+export const useGraphFlow = (address: string) => {
+  const { account } = useWeb3React()
+  const FLOWS_LIST = gql`query PurchaseFlows($address: String!, $account: String!) {
+    purchaseFlows(where: {buyer: $account, item: $address}) {
+      id
+      buyer
+      agreementId
+      endPaymentDate
+      item {
+        id
+      }
+      status
+      nftId
+      flowRate
+    }
+  }`
+  const {loading, data: queryData, error} = useQuery(FLOWS_LIST, {
+    pollInterval: 5000,
+    variables: {
+      address,
+      account,
+    },
+  })
+  const [flow, setFlow] = useState<{flowRate: string, owner: string, status: string}|undefined>()
+
+  useEffect(() => {
+    let current = {}
+    if (address && queryData && !error && !loading) {
+      current = queryData.purchaseFlows.find(({item: {id}}) => id === address)
+    }
+    if (flow?.status !== current?.status) {
+      setFlow(current)
+    }
+  }, [address, loading, error, queryData, flow])
+
+  return {
+    loading,
+    error,
     flow,
     setFlow,
   }
