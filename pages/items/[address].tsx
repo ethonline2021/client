@@ -2,6 +2,7 @@ import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
 import { Button, PageHeader, Tag } from "antd"
 import { ethers, Contract } from "ethers"
+import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
@@ -208,7 +209,7 @@ const ItemsView = () => {
     setFlow(flow)
     setTimeout(() => {
       setStatus()
-    }, 1000)
+    }, 3000)
   }
 
   const cancel = async () => {
@@ -255,6 +256,9 @@ const ItemsView = () => {
         >
           <Content>
             <p>{item.description}</p>
+            <p>
+              The event will be accessible at: <Link href={`/items/live#${address}`}><a>{`/items/live#${address}`}</a></Link>
+            </p>
             <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
               <Then>
                 <p>
@@ -301,7 +305,7 @@ const ItemsView = () => {
                     </Else>
                   </If>
                   <If condition={status && status.length}>
-                    <InfoTag>
+                    <InfoTag color='blue'>
                       {status}
                     </InfoTag>
                   </If>

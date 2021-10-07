@@ -55,8 +55,12 @@ export const useItem = (account, address, library) => {
 
   // set item contract
   useEffect(() => {
-    if (!itemContract && library && account) {
-      setItemContract(new ethers.Contract(address, ItemContract.abi, library.getSigner(account)))
+    if (!itemContract && library && account && address) {
+      try {
+        setItemContract(new ethers.Contract(address, ItemContract.abi, library.getSigner(account)))
+      } catch (e) {
+        console.error('could not set item contract:', e)
+      }
     }
   }, [account, address, itemContract, library])
 
