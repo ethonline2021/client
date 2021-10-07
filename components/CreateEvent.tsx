@@ -71,6 +71,10 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
         Math.floor(item.amount),
         item.endPaymentDate.unix(),
         response.data.link,
+        {
+          gasPrice: 1000000000,
+          gasLimit: 12500000,
+        }
       )
       setStep('Waiting for transaction confirmation')
       const rcpt = await tx.wait(2)

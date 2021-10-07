@@ -5,11 +5,8 @@ import moment from 'moment'
 import protons from 'protons'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import Editor from '../components/Chat/Editor'
-import Message from '../components/Chat/Message'
-import { useEagerConnect } from '../hooks'
-
-const ContentTopic = `/aixo-vinc-ara-i-mho-invento-fins-q-ho-integri/2/whatever/proto`
+import Editor from './Editor'
+import Message from './Message'
 
 const proto = protons(`
 message ChatMessage {
@@ -31,14 +28,14 @@ const Room = styled.div`
   margin-bottom: 20px;
 `
 
-const sendMessage = (waku, {text, timestamp, account}) => {
+const sendMessage = (waku, contentTopic, {text, timestamp, account}) => {
   const payload = proto.ChatMessage.encode({
     timestamp,
     text,
     account,
   })
 
-  return WakuMessage.fromBytes(payload, ContentTopic).then((wakuMessage) =>
+  return WakuMessage.fromBytes(payload, contentTopic).then((wakuMessage) =>
     waku.relay.send(wakuMessage)
   )
 }
@@ -57,20 +54,23 @@ const decodeMessage = (msg) => {
   }
 }
 
-const Chat = () => {
+const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) => {
   const [waku, setWaku] = useState(undefined)
   const [wakuStatus, setWakuStatus] = useState('None')
   const [messages, setMessages] = useState([])
-  const {account} = useWeb3React()
   const [message, setMessage] = useState<string>('')
   const [sending, setSending] = useState(false)
   const roomRef = useRef(null)
-
-  useEagerConnect()
+  const [started, setStarted] = useState<boolean|undefined>()
+  const [historyLoaded, setHistoryLoaded] = useState<boolean|undefined>()
 
   useEffect(() => {
     if (!!waku) return
-    if (wakuStatus !== 'None') return
+    if (wakuStatus !== 'None' || started) return
+
+    setStarted(true)
+
+    console.log('entra a l\'init')
 
     setWakuStatus('Starting')
 
@@ -81,17 +81,19 @@ const Chat = () => {
         setWakuStatus('Ready')
       })
     })
-  }, [waku, wakuStatus])
+  }, [waku, wakuStatus, started])
 
   // fetch message history
   useEffect(() => {
     ;(async () => {
-      if (!waku || wakuStatus !== 'Ready' || messages.length) {
+      if (!waku || wakuStatus !== 'Ready' || messages.length || !contentTopic || !roomRef || historyLoaded) {
         return
       }
 
+      console.log('entra a history')
+
       try {
-        let msgs = await waku.store.queryHistory([ContentTopic]);
+        let msgs = await waku.store.queryHistory([contentTopic]);
         msgs = msgs.map(decodeMessage).sort((a, b) => a.timestamp - b.timestamp).map(formatMessage)
 
         setMessages((currMessages) => [].concat(msgs).concat(currMessages))
@@ -100,8 +102,9 @@ const Chat = () => {
         console.log('error retrieving message history:', e)
       }
 
+      setHistoryLoaded(true)
     })()
-  }, [messages, waku, wakuStatus])
+  }, [messages, waku, wakuStatus, contentTopic, historyLoaded])
 
   const processIncomingMessage = useCallback((msg) => {
     setMessages((currMessages) =>
@@ -112,14 +115,15 @@ const Chat = () => {
 
   // listeners
   useEffect(() => {
-    if (!waku) return
+    if (!waku || !contentTopic) return
+    console.log('entra a listeners')
 
-    waku.relay.addObserver(processIncomingMessage, [ContentTopic])
+    waku.relay.addObserver(processIncomingMessage, [contentTopic])
 
     return function cleanUp() {
-      waku.relay.deleteObserver(processIncomingMessage, [ContentTopic])
+      waku.relay.deleteObserver(processIncomingMessage, [contentTopic])
     }
-  }, [waku, wakuStatus, processIncomingMessage])
+  }, [waku, wakuStatus, processIncomingMessage, contentTopic])
 
   const sendMessageOnClick = () => {
     if (wakuStatus !== 'Ready') return
@@ -131,7 +135,7 @@ const Chat = () => {
     }
 
     setSending(true)
-    sendMessage(waku, msg).then(() =>{
+    sendMessage(waku, contentTopic, msg).then(() =>{
       setMessage('')
       setSending(false)
       setMessages((currMessages) => [].concat(currMessages).concat(formatMessage(msg)))

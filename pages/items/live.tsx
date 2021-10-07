@@ -5,8 +5,9 @@ import axios from "axios"
 import { ethers } from "ethers"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/router"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Else, If, Then } from "react-if"
+import Chat from "../../components/Chat"
 
 import Loading from "../../components/Loading"
 import Video from "../../components/Video"
@@ -21,6 +22,8 @@ const LiveView = () => {
 
   // get address from url
   useEffect(() => {
+    if (addr?.length) return
+
     const addr = document.location.hash.replace(/^#/, "")
     if (!ethers.utils.isAddress(addr)) {
       message.warning("Invalid address specified")
@@ -30,26 +33,27 @@ const LiveView = () => {
     setAddress(addr)
   }, [push])
 
+  const fetchInfo = useCallback(async () => {
+    if (address) {
+      try {
+        const stream = await axios.get(`/api/stream`, {
+          params: {
+            id: address,
+          }
+        })
+
+        if (stream.data.active !== liveInfo?.active) {
+          setLiveInfo(stream.data)
+        }
+      } catch (e) {
+        console.error('error retrieving stream info:', e)
+      }
+    }
+  }, [address, liveInfo])
+
   // retrieve stream info
   useEffect(() => {
     let interval : NodeJS.Timer
-    const fetchInfo = async () => {
-      if (address) {
-        try {
-          const stream = await axios.get(`/api/stream`, {
-            params: {
-              id: address,
-            }
-          })
-
-          if (stream.data.active !== liveInfo?.active) {
-            setLiveInfo(stream.data)
-          }
-        } catch (e) {
-          console.error('error retrieving stream info:', e)
-        }
-      }
-    }
 
     ;(async () => {
       await fetchInfo()
@@ -61,15 +65,15 @@ const LiveView = () => {
     return () => {
       clearInterval(interval)
     }
-  }, [address, liveInfo])
+  }, [address, fetchInfo])
 
-  useEffect(() => {
-    ;(async () => {
-      if ((address && itemContract && account && item) && item.owner !== address) {
-        // await itemContract.balanceOf(account)
-      }
-    })()
-  }, [itemContract, address, item, account])
+  // useEffect(() => {
+  //   ;(async () => {
+  //     if ((address && itemContract && account && item) && item.owner !== address) {
+  //       // await itemContract.balanceOf(account)
+  //     }
+  //   })()
+  // }, [itemContract, address, item, account])
 
   useEagerConnect()
 
@@ -97,6 +101,10 @@ const LiveView = () => {
               </If>
             </Else>
           </If>
+          <Chat
+            account={account}
+            contentTopic={`/stream-a-buy/1/${address}/proto`}
+          />
         </Content>
       </PageHeader>
     </Loading>
