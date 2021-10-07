@@ -1,6 +1,6 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Button, PageHeader } from "antd"
+import { Button, PageHeader, Tag } from "antd"
 import { ethers, Contract } from "ethers"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
@@ -16,6 +16,7 @@ import { Content } from "antd/lib/layout/layout"
 import SuperfluidSDK from "@superfluid-finance/js-sdk"
 import { useErrors } from "../../providers"
 import { useFlow, useSuperfluid } from "../../hooks/superfluid"
+import styled from "styled-components"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -35,6 +36,8 @@ const ItemsView = () => {
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
   const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
   const { flow, setFlow, loading: loadingFlow } = useFlow(address)
+  const [ status, setStatus ] = useState<string|undefined>()
+  const [ symbol, setSymbol ] = useState<string|undefined>()
 
   // grab & set decimals
   useEffect(() => {
@@ -58,6 +61,7 @@ const ItemsView = () => {
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
           setPaid(await itemContract.totalPaid(account))
+          console.log('name:', await superTokenContract.name())
           setContentLoading(false)
         } catch (e) {
           console.error('error grabbing balance:', e)
@@ -85,6 +89,15 @@ const ItemsView = () => {
       }
     })();
   }, [price, decimals, item])
+
+  // grab & set symbol
+  useEffect(() => {
+    ;(async () => {
+      if (!symbol && superTokenContract) {
+        setSymbol(await superTokenContract.symbol())
+      }
+    })(symbol)
+  }, [superTokenContract, symbol])
 
   // block update event updating balance
   useEffect(() => {
@@ -117,7 +130,7 @@ const ItemsView = () => {
     }
 
     setBuying(true)
-
+    setStatus('initializing')
     if (!Number(await itemContract.availableAmount())) {
       const err = 'no items available for purchase'
 
@@ -134,6 +147,7 @@ const ItemsView = () => {
       console.log('account does not have enough balance', balance.toString(), item.price.toString())
       // this should be only with superfluid test tokens
       if ((await tokenContract.balanceOf(account)).lt(item.price)) {
+        setStatus('minting some fake tokens')
         const mint = await tokenContract.mint(account, ethers.utils.parseEther("1000"))
         // wait for tx
         await mint.wait()
@@ -141,12 +155,14 @@ const ItemsView = () => {
 
       // approve
       if ((await tokenContract.allowance(account, superTokenContract.address)).lt(item.price)) {
+        setStatus('setting allowance')
         const approve = await tokenContract.approve(superTokenContract.address, ethers.BigNumber.from(item.price))
         await approve.wait()
       }
 
       try {
         // wrap
+        setStatus('wraping tokens')
         const wrap = await superTokenContract.upgrade(ethers.BigNumber.from(item.price))
         await wrap.wait()
       } catch (e) {
@@ -156,6 +172,7 @@ const ItemsView = () => {
 
     let flowRate : ethers.BigNumber
     try {
+      setStatus('checking required flow rate')
       flowRate = await itemContract.requiredFlowRate()
     } catch (e) {
       console.error('error fetching flow rate:', e)
@@ -177,6 +194,7 @@ const ItemsView = () => {
     }
 
     try {
+      setStatus('initializing flow')
       await buyer.flow(flow)
     } catch (e) {
       console.error('error creating flow:', flow, e)
@@ -185,8 +203,12 @@ const ItemsView = () => {
       return
     }
 
+    setStatus('done')
     setBuying(false)
     setFlow(flow)
+    setTimeout(() => {
+      setStatus()
+    }, 1000)
   }
 
   const cancel = async () => {
@@ -240,45 +262,50 @@ const ItemsView = () => {
                 </p>
               </Then>
               <Else>
-                <If condition={!loadingFlow && flow?.flowRate === "0"}>
-                  <Then>
-                    <Button
-                      disabled={price === 0 || buying || !stock}
-                      loading={buying}
-                      onClick={purchase}
-                    >
-                      Buy one for {price} ({stock.toString()} left)
-                    </Button>
-                  </Then>
-                  <Else>
-                    <If condition={flow?.flowRate && !ethers.BigNumber.from(flow?.flowRate).isZero()}>
-                      <>
-                        <p>
-                          You&apos;re already paying for it, total paid: {decimal(paid, decimals)}
-                        </p>
-                        <If condition={paid.gte(item.price)}>
-                          <Then>
-                            <Button
-                              type='primary'
-                              onClick={claim}
-                            >
-                              Claim
-                            </Button>
-                          </Then>
-                          <Else>
-                            <Button
-                              onClick={cancel}
-                              loading={buying}
-                              disabled={buying}
-                            >
-                              Cancel assistance
-                            </Button>
-                          </Else>
-                        </If>
-                      </>
-                    </If>
-                  </Else>
-                </If>
+                <Buttons>
+                  <If condition={!loadingFlow && flow?.flowRate === "0"}>
+                    <Then>
+                      <Button
+                        disabled={price === 0 || buying || !stock}
+                        loading={buying}
+                        onClick={purchase}
+                      >
+                        Buy one for {price}{symbol} ({stock.toString()} left)
+                      </Button>
+                    </Then>
+                    <Else>
+                      <If condition={flow?.flowRate && !ethers.BigNumber.from(flow?.flowRate).isZero()}>
+                        <Then>
+                          <If condition={paid.gte(item.price)}>
+                            <Then>
+                              <Button
+                                type='primary'
+                                onClick={claim}
+                              >
+                                Claim
+                              </Button>
+                            </Then>
+                            <Else>
+                              <Button
+                                onClick={cancel}
+                                loading={buying}
+                                disabled={buying}
+                              >
+                                Cancel assistance
+                              </Button>
+                            </Else>
+                          </If>
+                          <InfoTag color='green'>Paid {decimal(paid, decimals)} already</InfoTag>
+                        </Then>
+                      </If>
+                    </Else>
+                  </If>
+                  <If condition={status && status.length}>
+                    <InfoTag>
+                      {status}
+                    </InfoTag>
+                  </If>
+                </Buttons>
               </Else>
             </If>
           </Content>
@@ -289,3 +316,12 @@ const ItemsView = () => {
 }
 
 export default ItemsView
+
+const Buttons = styled.div`
+  display: flex;
+  align-items: center;
+`
+
+const InfoTag : typeof Tag = styled(Tag)`
+  margin-left: 10px;
+`

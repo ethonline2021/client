@@ -13,7 +13,7 @@ export const useSuperfluid = (library) => {
     ;(async () => {
       if (!superfluid && library) {
         const sfVersion = "v1"
-        const tokenSymbol = "fDAI"
+        const tokenSymbol = process.env.NEXT_PUBLIC_PAY_TOKEN_SYMBOL
 
         let sf
         try {
