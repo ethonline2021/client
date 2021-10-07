@@ -70,8 +70,6 @@ const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) 
 
     setStarted(true)
 
-    console.log('entra a l\'init')
-
     setWakuStatus('Starting')
 
     Waku.create({ bootstrap: true }).then((waku) => {
@@ -89,8 +87,6 @@ const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) 
       if (!waku || wakuStatus !== 'Ready' || messages.length || !contentTopic || !roomRef || historyLoaded) {
         return
       }
-
-      console.log('entra a history')
 
       try {
         let msgs = await waku.store.queryHistory([contentTopic]);
@@ -116,7 +112,6 @@ const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) 
   // listeners
   useEffect(() => {
     if (!waku || !contentTopic) return
-    console.log('entra a listeners')
 
     waku.relay.addObserver(processIncomingMessage, [contentTopic])
 

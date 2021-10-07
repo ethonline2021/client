@@ -33,22 +33,24 @@ const LiveView = () => {
     setAddress(addr)
   }, [push])
 
-  const fetchInfo = useCallback(async () => {
-    if (address) {
-      try {
-        const stream = await axios.get(`/api/stream`, {
-          params: {
-            id: address,
-          }
-        })
+  const fetchInfo = useCallback(() => {
+    ;(async () => {
+      if (address) {
+        try {
+          const stream = await axios.get(`/api/stream`, {
+            params: {
+              id: address,
+            }
+          })
 
-        if (stream.data.active !== liveInfo?.active) {
-          setLiveInfo(stream.data)
+          if (stream.data.active !== liveInfo?.active) {
+            setLiveInfo(stream.data)
+          }
+        } catch (e) {
+          console.error('error retrieving stream info:', e)
         }
-      } catch (e) {
-        console.error('error retrieving stream info:', e)
       }
-    }
+    })()
   }, [address, liveInfo])
 
   // retrieve stream info
