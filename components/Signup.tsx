@@ -1,22 +1,34 @@
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
+import { useWeb3React } from '@web3-react/core'
 import { Alert, Button, Form, Input, Modal } from 'antd'
 import { useEffect, useState } from 'react'
 import { If } from 'react-if'
 
 import { useContracts } from '../hooks/contracts'
+import { useMetaTx } from '../hooks/metatx'
+import networks from "../networks"
 
 const SignUp = ({visible, close, onComplete} : {visible: boolean, close: () => void, onComplete: (result: any) => void}) => {
   const { main, setDeployed } = useContracts()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<string|undefined>()
 
+  const { chainId } = useWeb3React();
+  const { executeMetaTx } = useMetaTx();
+
   const onSend = async (values: any) => {
+    if(!chainId) return
+
     setLoading(true)
     let transaction : TransactionResponse
     let rcpt : TransactionReceipt
     try {
       setStep('Deploying your user contract')
-      transaction = await main.deployUser(values.username, values.description)
+      if(process.env.NEXT_PUBLIC_BICONOMY_ENABLED == "true"){
+        transaction = await executeMetaTx('Main', networks[chainId].main as string, 'deployUser', [values.username, values.description]);
+      }else{
+        transaction = await main.deployUser(values.username, values.description)
+      }
 
       setStep('Waiting for transaction confirmation')
       rcpt = await transaction.wait(1)
