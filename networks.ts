@@ -14,7 +14,7 @@ const networks : Networks = {
   42: {
     key: 'kovan',
     title: 'Kovan testnet',
-    main: '0xe34306a96665dF9117fEab8b4547cB8f9FC99f00',
+    main: '0xa5b3080a12822A17288E78E7677f060E97d20F15',
     payments: '0xe3cb950cb164a31c66e32c320a800d477019dcff',
     graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021_kovan/v0.0.13',
   },

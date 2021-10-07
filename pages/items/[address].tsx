@@ -154,6 +154,16 @@ const ItemsView = () => {
       }
     }
 
+    let flowRate : ethers.BigNumber
+    try {
+      flowRate = await itemContract.requiredFlowRate()
+    } catch (e) {
+      console.error('error fetching flow rate:', e)
+      setBuying(false)
+
+      return
+    }
+
     const buyer = superfluid.user({
       address: account,
       token: superTokenContract.address,
@@ -163,7 +173,7 @@ const ItemsView = () => {
 
     const flow = {
       recipient: address,
-      flowRate: item.flowRate.toString(),
+      flowRate: flowRate.toString(),
     }
 
     try {
