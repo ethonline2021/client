@@ -1,4 +1,4 @@
-import { TransactionReceipt, TransactionRequest } from '@ethersproject/providers'
+import { TransactionReceipt, TransactionRequest, TransactionResponse } from '@ethersproject/providers'
 import { useWeb3React } from '@web3-react/core'
 import {
   Alert,
@@ -16,6 +16,7 @@ import { If } from 'react-if'
 
 import Erc20 from '../contracts/contracts/utils/Erc20.sol/Erc20.json'
 import { useContracts } from '../hooks/contracts'
+import { useMetaTx } from '../hooks/metatx'
 import networks from '../networks'
 import { Item } from '../types'
 
@@ -28,8 +29,9 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
   const [ amount, setAmount ] = useState(0)
   const { push } = useRouter()
   const { account, library, chainId } = useWeb3React()
-  const { deployed } = useContracts()
+  const { main } = useContracts()
   const [ step, setStep ] = useState<string|undefined>()
+  const { executeMetaTx } = useMetaTx();
 
   const onSubmit = async (item: Item) => {
     setLoading(true)
@@ -63,19 +65,28 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
       const response = await axios.post('/api/nfts/upload', item)
 
       setStep('Deploying item contract')
-      const tx = await deployed.deployItem(
-        item.title,
-        item.description,
-        price,
-        paytoken.address,
-        Math.floor(item.amount),
-        item.endPaymentDate.unix(),
-        response.data.link,
-        {
-          gasPrice: 1000000000,
-          gasLimit: 12500000,
-        }
-      )
+      let tx : TransactionResponse
+      if(process.env.NEXT_PUBLIC_BICONOMY_ENABLED == "true"){
+        tx = await executeMetaTx('Main', networks[chainId].main as string, 'deployItem', [
+          item.title,
+          item.description,
+          price,
+          paytoken.address,
+          Math.floor(item.amount),
+          item.endPaymentDate.unix(),
+          response.data.link]);
+      }else{
+        tx = await main.deployItem(
+          item.title,
+          item.description,
+          price,
+          paytoken.address,
+          Math.floor(item.amount),
+          item.endPaymentDate.unix(),
+          response.data.link
+        )
+      }
+
       setStep('Waiting for transaction confirmation')
       const rcpt = await tx.wait(2)
       const [{args}] = rcpt.events?.filter((x: any) => x.event === "ItemDeployed")

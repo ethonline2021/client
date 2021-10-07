@@ -34,7 +34,18 @@ export const useMetaTx = () => {
     ;(async () => {
       if(!library) return
 
-      const bic: Biconomy = new Biconomy(library,{ apiKey: process.env.NEXT_PUBLIC_BICONOMY_API_KEY, debug: true})
+      let apiKey;
+      switch(chainId){
+        case 42:
+          apiKey = process.env.NEXT_PUBLIC_KOVAN_BICONOMY_API_KEY;
+          break;
+        case 80001:
+          apiKey = process.env.NEXT_PUBLIC_MUMBAI_BICONOMY_API_KEY;
+          break;
+        default: throw "Unsuported Network"
+      }
+
+      const bic: Biconomy = new Biconomy(library,{ apiKey, debug: false})
       const metatxProv = new ethers.providers.Web3Provider(bic)
       
       setBiconomy(bic)
@@ -56,9 +67,6 @@ export const useMetaTx = () => {
       let contract: ethers.Contract
       let contractInterface: ethers.utils.Interface
 
-      console.log('Getting user signature');
-      console.log('User address: ', userAddress);
-
       switch (contractName) {
         case 'Main':
           contract = new ethers.Contract(
@@ -68,14 +76,8 @@ export const useMetaTx = () => {
           )
           contractInterface = new ethers.utils.Interface(ContractMain.abi)
           break
-        case 'User':
-          contract = new ethers.Contract(
-            contractAddress,
-            ContractMain.abi,
-            biconomy.getSignerByAddress(userAddress)
-          )
-          contractInterface = new ethers.utils.Interface(ContractUser.abi)
-          break
+        default:
+          throw "Contract not supported!"
       }
 
       let nonce = await contract.getNonce(userAddress);
