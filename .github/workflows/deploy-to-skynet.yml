@@ -16,11 +16,11 @@ jobs:
 
       - run: yarn
       - run: yarn build
-      - run: yarn next export
         env:
           NEXT_PUBLIC_PAY_TOKEN_SYMBOL: fDAI
           NEXT_PUBLIC_BICONOMY_ENABLED: "true"
           NEXT_PUBLIC_BICONOMY_API_KEY: ${{ secrets.BICONOMY_API_KEY }}
+      - run: yarn next export
 
       - name: "Deploy to Skynet"
         uses: SkynetLabs/deploy-to-skynet-action@v2
