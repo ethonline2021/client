@@ -39,6 +39,7 @@ const ItemsView = () => {
   const {flow, setFlow, loading: loadingFlow} = useGraphFlow(address)
   const [ status, setStatus ] = useState<string|undefined>()
   const [ symbol, setSymbol ] = useState<string|undefined>()
+  const [ hasNft, setHasNft ] = useState<boolean>(false)
 
   // grab & set decimals
   useEffect(() => {
@@ -89,6 +90,30 @@ const ItemsView = () => {
       }
     })();
   }, [price, decimals, item])
+
+  // grab nft amount
+  useEffect(() => {
+    ;(async () => {
+      if (!item || !flow || !itemContract || !account) {
+        return
+      }
+
+      if (flow.status !== 'Finished') {
+        return
+      }
+
+      let nftamount : ethers.BigNumber = ethers.BigNumber.from(0)
+      try {
+        nftamount = await itemContract.balanceOf(account, flow.nftId)
+      } catch (e)  {
+        console.error('error grabbing nft amount:', e)
+        return
+      }
+
+      setHasNft(Boolean(nftamount))
+    })()
+
+  }, [item, flow, itemContract, account])
 
   // grab & set symbol
   useEffect(() => {
@@ -245,11 +270,7 @@ const ItemsView = () => {
 
     setBuying(true)
     const claim = await itemContract.claim(account)
-    await claim.once('Claim', (event, listener) => {
-      console.log('claimed:', claim)
-      console.log('event:', event)
-      console.log('listener:', listener)
-    })
+    await claim.wait()
     setBuying(false)
   }
 
@@ -331,6 +352,11 @@ const ItemsView = () => {
                           </If>
                           <InfoTag color='green'>Paid {decimal(paid, decimals)}{symbol} already (out of {price}{symbol})</InfoTag>
                         </Then>
+                        <Else>
+                          <If condition={flow && flow.status === 'Finished' && hasNft}>
+                            <p>You already purchased and claimed this 😊</p>
+                          </If>
+                        </Else>
                       </If>
                     </Else>
                   </If>
