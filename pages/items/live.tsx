@@ -1,3 +1,4 @@
+import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
 import { message, PageHeader } from "antd"
 import { Content } from "antd/lib/layout/layout"
@@ -12,6 +13,7 @@ import Chat from "../../components/Chat"
 import Loading from "../../components/Loading"
 import Video from "../../components/Video"
 import { useEagerConnect, useItem } from "../../hooks"
+import { useGraphFlow } from "../../hooks/superfluid"
 
 const LiveView = () => {
   const [ address, setAddress ] = useState<string|undefined>()
@@ -19,6 +21,8 @@ const LiveView = () => {
   const { push } = useRouter()
   const { item, loading, itemContract } = useItem(account, address, library)
   const [ liveInfo, setLiveInfo ] = useState<{rtmp: string, playbackUrl: string, active: boolean} | undefined>()
+  const { flow, loading: loadingFlow } = useGraphFlow(address)
+  const [ hasNft, setHasNft ] = useState<boolean|undefined>()
 
   // get address from url
   useEffect(() => {
@@ -58,6 +62,11 @@ const LiveView = () => {
     let interval : NodeJS.Timer
 
     ;(async () => {
+      // for now, we don't care about the stream for the organizer
+      if (!flow && (item && item.owner !== account)) {
+        return
+      }
+
       await fetchInfo()
       if (!interval) {
         interval = setInterval(fetchInfo, 10000)
@@ -65,22 +74,34 @@ const LiveView = () => {
     })()
 
     return () => {
-      clearInterval(interval)
+      if (interval) {
+        clearInterval(interval)
+      }
     }
-  }, [address, fetchInfo])
+  }, [account, address, fetchInfo, flow, item])
 
-  // useEffect(() => {
-  //   ;(async () => {
-  //     if ((address && itemContract && account && item) && item.owner !== address) {
-  //       // await itemContract.balanceOf(account)
-  //     }
-  //   })()
-  // }, [itemContract, address, item, account])
+  useEffect(() => {
+    ;(async () => {
+      if ((!flow || flow && !flow.nftId) || hasNft !== undefined || !itemContract || !account) {
+        return
+      }
+
+      let nftamount : Number = 0
+      try {
+        nftamount = (await itemContract.balanceOf(account, Number(flow.nftId))).toNumber()
+      } catch (e) {
+        console.error('could not fetch balance of NFT:', e)
+        return
+      }
+
+      setHasNft(Boolean(nftamount))
+    })()
+  }, [flow, hasNft, itemContract, account])
 
   useEagerConnect()
 
   return (
-    <Loading loading={loading}>
+    <Loading loading={loading || loadingFlow}>
       <PageHeader title={item.title} style={{margin: 'auto'}}>
         <Content>
           <p>{item.description}</p>
@@ -89,24 +110,31 @@ const LiveView = () => {
               <p>To start streaming, connect your streaming program to {liveInfo?.rtmp}</p>
             </Then>
             <Else>
-              <If condition={liveInfo?.active}>
+              <If condition={hasNft}>
                 <Then>
-                  {() =>
-                    <Video
-                      src={liveInfo.playbackUrl}
-                    />
-                  }
+                  <If condition={liveInfo?.active}>
+                    <Then>
+                      {() =>
+                        <Video
+                          src={liveInfo.playbackUrl}
+                        />
+                      }
+                    </Then>
+                    <Else>
+                      <p>Streaming has not started yet</p>
+                    </Else>
+                  </If>
+                  <Chat
+                    account={account}
+                    contentTopic={`/stream-a-buy/1/${address}/proto`}
+                  />
                 </Then>
                 <Else>
-                  <p>Streaming has not started yet</p>
+                  <p>Sorry but you don&apos;t have the required NFT for accessing this event</p>
                 </Else>
               </If>
             </Else>
           </If>
-          <Chat
-            account={account}
-            contentTopic={`/stream-a-buy/1/${address}/proto`}
-          />
         </Content>
       </PageHeader>
     </Loading>

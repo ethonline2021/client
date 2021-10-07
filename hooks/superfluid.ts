@@ -97,38 +97,40 @@ export const useFlow = (receiver: string) => {
   }
 }
 
-export const useGraphFlow = (receiver: string) => {
+export const useGraphFlow = (address: string) => {
   const { account } = useWeb3React()
-  const FLOWS_LIST = gql`
-    {
-      purchaseFlows(where: {buyer: "${account}"}) {
-        buyer
-        item {
-          id
-        }
-        status
-        nftId
-        flowRate
+  const FLOWS_LIST = gql`query PurchaseFlows($address: String!, $account: String!) {
+    purchaseFlows(where: {buyer: $account, item: $address}) {
+      id
+      buyer
+      agreementId
+      endPaymentDate
+      item {
+        id
       }
+      status
+      nftId
+      flowRate
     }
-  `
+  }`
   const {loading, data: queryData, error} = useQuery(FLOWS_LIST, {
     pollInterval: 5000,
+    variables: {
+      address,
+      account,
+    },
   })
-  const [flow, setFlow] = useState({
-    flowRate: '0',
-    status: 'not-initialized',
-  })
+  const [flow, setFlow] = useState<{flowRate: string, owner: string, status: string}|undefined>()
 
   useEffect(() => {
     let current = {}
-    if (queryData && !error && !loading) {
-      current = queryData.purchaseFlows.find(({item: {id}}) => id === receiver)
+    if (address && queryData && !error && !loading) {
+      current = queryData.purchaseFlows.find(({item: {id}}) => id === address)
     }
-    if (receiver && !loading && !flow || (flow && flow.status && flow?.status !== current?.status)) {
+    if (flow?.status !== current?.status) {
       setFlow(current)
     }
-  }, [receiver, loading, error, queryData, flow])
+  }, [address, loading, error, queryData, flow])
 
   return {
     loading,

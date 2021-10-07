@@ -95,7 +95,7 @@ const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) 
         setMessages((currMessages) => [].concat(msgs).concat(currMessages))
         roomRef.current.scrollTop = roomRef.current.scrollHeight
       } catch (e) {
-        console.log('error retrieving message history:', e)
+        console.info('error retrieving message history:', e)
       }
 
       setHistoryLoaded(true)

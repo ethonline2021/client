@@ -263,7 +263,6 @@ const ItemsView = () => {
     setBuying(true)
     const withdraw = await itemContract.withdrawEth(account)
     const waitres = await withdraw.wait()
-    console.log('resulting withdraw object:', withdraw)
     console.log('resulting waitres object:', waitres)
     setBuying(false)
   }
@@ -298,7 +297,7 @@ const ItemsView = () => {
               </Then>
               <Else>
                 <Buttons>
-                  <If condition={!loadingFlow && !flow}>
+                  <If condition={!loadingFlow && (!flow || (flow && !flow.status))}>
                     <Then>
                       <Button
                         disabled={price === 0 || buying || !stock}
