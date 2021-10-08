@@ -5,6 +5,7 @@ import { Content } from "antd/lib/layout/layout"
 import axios from "axios"
 import { ethers } from "ethers"
 import dynamic from "next/dynamic"
+import Head from 'next/head'
 import { useRouter } from "next/router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Else, If, Then } from "react-if"
@@ -102,6 +103,9 @@ const LiveView = () => {
 
   return (
     <Loading loading={loading || loadingFlow}>
+      <Head>
+        <title>{item.title} - Stream a buy</title>
+      </Head>
       <PageHeader title={item.title} style={{margin: 'auto'}}>
         <Content>
           <p>{item.description}</p>

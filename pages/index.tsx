@@ -66,6 +66,10 @@ const Home: NextPage = () => {
   const { loading, error, data } = useQuery(ITEMS_LIST)
 
   return (
+    <>
+    <Head>
+      <title>Stream a buy</title>
+    </Head>
     <div>
       {
         contents
@@ -87,6 +91,7 @@ const Home: NextPage = () => {
         close={() => setEventModal(false)}
       />
     </div>
+    </>
   )
 }
 
