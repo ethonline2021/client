@@ -1,14 +1,12 @@
 import {Biconomy} from "@biconomy/mexa"
 import { useWeb3React } from "@web3-react/core"
 import { ethers } from "ethers"
-import { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import ContractMain from "../contracts/contracts/Main.sol/Main.json"
-import ContractUser from "../contracts/contracts/User.sol/User.json"
 
 type ContractName =
 	| 'Main'
-	| 'User'
 
 // Initialize Constants
 const domainType = [
