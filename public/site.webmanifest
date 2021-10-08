@@ -1,0 +1,25 @@
+{
+  "background_color": "#fff",
+  "display": "standalone",
+  "homepage_url": "https://streamabuy.elboletaire.com",
+  "providedBy": { "name": "StreamABuy", "url": "https://streamabuy.elboletaire.com" },
+  "icons": [
+    {
+      "src": "./192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }, {
+      "src": "./512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait",
+  "name": "Stream-a-buy",
+  "description": "Stream purchase anything",
+  "iconPath": "./",
+  "short_name": "StreamABuy",
+  "start_url": ".",
+  "theme_color": "#ffffff",
+  "skylink": "AQBJ1Cy1W7GaUHfJodcznuCeqkDCHWX5-7QlmiQgkdH5UQ"
+}

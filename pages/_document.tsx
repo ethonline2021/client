@@ -45,6 +45,8 @@ export default class MyDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Roboto&display=optional"
             rel="stylesheet"
           />
+          <link rel="manifest" href="/site.webmanifest" />
+          <link rel="icon" type="image/png" href="/app_icon.png" />
         </Head>
         <body>
           <Main />

@@ -150,7 +150,9 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
           <Input type="number" step="0.00000001" min="0" />
         </Form.Item>
         <Form.Item label="Payment limit date" name="endPaymentDate" rules={[{required: true}]}>
-          <DatePicker />
+          <DatePicker
+            disabledDate={(date) => date.isSameOrBefore(new Date())}
+          />
         </Form.Item>
         <Form.Item label="Items amount" name="amount" rules={[{required: true}]}>
           <Input type="number" step="1" min="1" />
