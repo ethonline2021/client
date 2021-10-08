@@ -14,9 +14,9 @@ const networks : Networks = {
   42: {
     key: 'kovan',
     title: 'Kovan testnet',
-    main: '0xc0352d08CDBE8262956212adFc722c5a545e0861',
+    main: '0x090C23c667956810Bb70d38bBdaf3309Cf3a4BC0',
     payments: '0xe3cb950cb164a31c66e32c320a800d477019dcff',
-    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021_kovan/v0.0.19',
+    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021_kovan/v0.0.20',
   },
   137: {
     key: 'polygon',
@@ -25,9 +25,9 @@ const networks : Networks = {
   80001: {
     key: 'mumbai',
     title: 'Mumbai testnet',
-    main: '0x55Dd452EB6F178e54b642085f93Ef546b34F18a7',
+    main: '0x10B0cF01626e3dFBC1A65C53e5C55EAddF9947E5',
     payments: '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.19',
+    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.20',
   },
 }
 
