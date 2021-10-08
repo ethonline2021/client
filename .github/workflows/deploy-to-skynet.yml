@@ -21,6 +21,7 @@ jobs:
           NEXT_PUBLIC_BICONOMY_ENABLED: "true"
           NEXT_PUBLIC_MUMBAI_BICONOMY_API_KEY: ${{ secrets.MUMBAI_BICONOMY_API_KEY }}
           NEXT_PUBLIC_KOVAN_BICONOMY_API_KEY: ${{ secrets.KOVAN_BICONOMY_API_KEY }}
+          NEXT_PUBLIC_API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
       - run: yarn next export
 
       - name: "Deploy to Skynet"

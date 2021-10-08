@@ -41,7 +41,7 @@ const LiveView = () => {
     ;(async () => {
       if (address) {
         try {
-          const stream = await axios.get(`/api/stream`, {
+          const stream = await axios.get(`${process.env.NEXT_PUBLIC_API_ENDPOINT}api/stream`, {
             params: {
               id: address,
             }

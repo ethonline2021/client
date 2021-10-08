@@ -62,7 +62,7 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
     let itemAddress : string
     try {
       setStep('Creating NFT files')
-      const response = await axios.post('/api/nfts/upload', item)
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_ENDPOINT}api/nfts/upload`, item)
 
       setStep('Deploying item contract')
       let tx : TransactionResponse
