@@ -300,6 +300,9 @@ const ItemsView = () => {
             <p>
               The event will be accessible at: <Link href={`/items/live#${address}`}><a>{`/items/live#${address}`}</a></Link>
             </p>
+            <p>
+              Payment limit date: {item.endPaymentDate?.toDateString()}
+            </p>
             <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
               <Then>
                 <p>
