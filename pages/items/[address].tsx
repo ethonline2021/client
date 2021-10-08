@@ -282,7 +282,7 @@ const ItemsView = () => {
     }
 
     setBuying(true)
-    const withdraw = await itemContract.withdrawEth(account)
+    const withdraw = await itemContract.withdrawErc20(account, superTokenContract.address)
     const waitres = await withdraw.wait()
     console.log('resulting waitres object:', waitres)
     setBuying(false)
