@@ -7,14 +7,16 @@ import Item from "../../components/Item"
 import Loading from "../../components/Loading"
 
 const AllItemsList = () => {
-  const { account } = useWeb3React()
   const ITEMS_LIST = gql`
     {
-      items(where: {owner_not_contains: "${account}"}) {
+      items {
         id
         title
         description
         address
+        uri
+        price
+        token
       }
     }
   `
