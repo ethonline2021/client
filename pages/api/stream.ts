@@ -69,7 +69,8 @@ export default async function handler(
   }
 
   const response = {
-    rtmp: `rtmp://rtmp.livepeer.com/live/${result.streamKey}`,
+    rtmp: 'rtmp://rtmp.livepeer.com/live/',
+    streamKey: result.streamKey,
     playbackUrl: `https://cdn.livepeer.com/hls/${result.playbackId}/index.m3u8`,
     active: result.isActive,
   }

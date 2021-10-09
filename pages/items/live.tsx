@@ -1,6 +1,6 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Alert, message, PageHeader, Image } from "antd"
+import { Alert, message, PageHeader, Image, Row, Col } from "antd"
 import { Content } from "antd/lib/layout/layout"
 import axios from "axios"
 import { ethers } from "ethers"
@@ -23,7 +23,7 @@ const LiveView = () => {
   const { account, library } = useWeb3React()
   const { push } = useRouter()
   const { item, loading, itemContract } = useItem(account, address, library)
-  const [ liveInfo, setLiveInfo ] = useState<{rtmp: string, playbackUrl: string, active: boolean} | undefined>()
+  const [ liveInfo, setLiveInfo ] = useState<{rtmp: string, playbackUrl: string, active: boolean, streamKey: string} | undefined>()
   const { flow, loading: loadingFlow } = useGraphFlow(address)
   const [ hasNft, setHasNft ] = useState<boolean|undefined>()
 
@@ -117,45 +117,56 @@ const LiveView = () => {
             </>
           </If>
         </PageHeader>
-        <If condition={item.owner === account}>
+        <If condition={item.owner === account && !liveInfo?.active}>
+          <Alert
+            type='info'
+            message={(<>
+              <p>
+                To start streaming, connect your streaming software with:
+              </p>
+              <Row>
+                <Col span={4}>
+                  Server:
+                </Col>
+                <Col span={20}>
+                  <code>{liveInfo?.rtmp}</code>
+                </Col>
+                <Col span={4}>
+                  Stream key:
+                </Col>
+                <Col span={20}>
+                  <code>{liveInfo?.streamKey}</code>
+                </Col>
+              </Row>
+            </>)}
+          />
+        </If>
+        <If condition={hasNft || item.owner === account}>
           <Then>
-            <Alert
-              type='info'
-              showIcon
-              message={<>To start streaming, connect your streaming program to <code>{liveInfo?.rtmp}</code></>}
+            <If condition={liveInfo?.active}>
+              <Then>
+                {() =>
+                  <Video
+                    src={liveInfo.playbackUrl}
+                  />
+                }
+              </Then>
+              <Else>
+                <p>Streaming has not started yet</p>
+              </Else>
+            </If>
+            <Chat
+              account={account}
+              contentTopic={`/stream-a-buy/1/${address}/proto`}
             />
           </Then>
           <Else>
-            <If condition={hasNft}>
-              <Then>
-                <If condition={liveInfo?.active}>
-                  <Then>
-                    {() =>
-                      <Video
-                        src={liveInfo.playbackUrl}
-                      />
-                    }
-                  </Then>
-                  <Else>
-                    <p>Streaming has not started yet</p>
-                  </Else>
-                </If>
-              </Then>
-              <Else>
-                <Alert
-                  type='warning'
-                  showIcon
-                  message='Sorry but you don&apos;t have the required NFT for accessing this event 😢'
-                />
-              </Else>
-            </If>
+            <Alert
+              type='warning'
+              showIcon
+              message='Sorry but you don&apos;t have the required NFT for accessing this event 😢'
+            />
           </Else>
-        </If>
-        <If condition={hasNft || item.owner === account}>
-          <Chat
-            account={account}
-            contentTopic={`/stream-a-buy/1/${address}/proto`}
-          />
         </If>
       </Content>
     </Loading>

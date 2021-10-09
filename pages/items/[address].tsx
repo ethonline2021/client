@@ -75,7 +75,6 @@ const ItemsView = () => {
   useEffect(() => {
     ;(async () => {
       if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account && itemContract) {
-        console.log('hmmmm');
         setUpdating(true)
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
