@@ -42,6 +42,8 @@ function MyApp({ Component, pageProps }: AppProps) {
         } catch (e) {
           console.error('error initializing user\'s deployed contract:', e)
         }
+      } else {
+        setDeployed(undefined)
       }
     },
     signer,

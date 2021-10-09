@@ -57,6 +57,10 @@ const Menu = () => {
         link: 'My items',
       }])
     }
+
+    if (!deployed && menu.length !== items.length) {
+      setMenu([...items])
+    }
   }, [deployed, items, menu])
 
   return (
