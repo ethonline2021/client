@@ -29,18 +29,22 @@ const Home: NextPage = () => {
     </Head>
     <div>
       <StyledTitle>
-        <Typography.Title style={{fontSize: "60px", color: "#001628"}}>💸 Stream-A-Buy</Typography.Title>
-        <Typography.Title style={{color: "#00162894"}} level={2}>Let the people pay by streams</Typography.Title>
+        <Typography.Title style={{fontSize: "60px", color: "#001628", marginBottom: "0.1em"}}>💸 Stream-A-Buy</Typography.Title>
+        <Typography.Title style={{marginTop: "0", color: "#00162894", fontWeight: "normal", "fontSize": "17px"}} level={2}>Let the people pay by streams</Typography.Title>
+      
+        <Actions>
+          {!deployed && 
+            <Button type="primary" size="large" onClick={() => setSignupModal(true)}>Signup</Button>
+          }
+
+          {deployed && 
+            <Button type="primary" size="large" onClick={() => setEventModal(true)}>Start selling</Button>
+          }
+
+          <Button href="/items/all" type="primary" size="large" style={{marginLeft:"10px"}}>Explore</Button>
+        </Actions>
       </StyledTitle>
 
-      {!deployed && 
-        <Button>Signup</Button>
-      }
-      {deployed && 
-        <Button onClick={() => setEventModal(true)}>Start selling</Button>
-      }
-
-      <Button>Explore</Button>
       
       <SignUp
         visible={signupModal}
@@ -58,8 +62,12 @@ const Home: NextPage = () => {
 }
 
 const StyledTitle = styled.div`
-  margin:0 0 50px 0;
+  margin:35px 0 50px 0;
   text-align:center;
+`
+
+const Actions = styled.div`
+  margin-top: 40px;
 `
 
 
