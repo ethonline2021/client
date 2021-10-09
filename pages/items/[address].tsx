@@ -1,5 +1,5 @@
 import { useWeb3React } from "@web3-react/core"
-import { Alert, Button, PageHeader, Table, Tag } from "antd"
+import { Alert, Button, Image, PageHeader, Table, Tag } from "antd"
 import { ethers } from "ethers"
 import Head from "next/head"
 import Link from "next/link"
@@ -299,6 +299,7 @@ const ItemsView = () => {
           onBack={() => history.back()}
         >
           <Content>
+            <Image src={`${item.uri}/image.png`} style={{width:"400px"}} />
             <Text>{item.description}</Text>
             <p>
               The event will be accessible at: <Link href={`/items/live#${address}`}><a>{`/items/live#${address}`}</a></Link>
