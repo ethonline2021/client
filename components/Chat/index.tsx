@@ -22,12 +22,6 @@ const formatMessage = ({timestamp, text, account}) => ({
   account,
 })
 
-const Room = styled.div`
-  max-height: 500px;
-  overflow-y: scroll;
-  margin-bottom: 20px;
-`
-
 const sendMessage = (waku, contentTopic, {text, timestamp, account}) => {
   const payload = proto.ChatMessage.encode({
     timestamp,
@@ -141,6 +135,7 @@ const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) 
   return (
     <>
       <Room ref={roomRef}>
+        <RoomTitle>Chat with others</RoomTitle>
         {
           messages.map((msg, i) => (
             <Message
@@ -164,3 +159,16 @@ const Chat = ({contentTopic, account}: {contentTopic: string, account: string}) 
 
 export default Chat
 
+const Room = styled.div`
+  min-height: 150px;
+  max-height: 500px;
+  overflow-y: scroll;
+  margin-bottom: 20px;
+  margin-top: 40px;
+`
+
+const RoomTitle = styled.h4`
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+`

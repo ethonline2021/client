@@ -1,6 +1,6 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { message, PageHeader } from "antd"
+import { Alert, message, PageHeader, Image } from "antd"
 import { Content } from "antd/lib/layout/layout"
 import axios from "axios"
 import { ethers } from "ethers"
@@ -9,6 +9,7 @@ import Head from 'next/head'
 import { useRouter } from "next/router"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Else, If, Then } from "react-if"
+import styled from "styled-components"
 import Chat from "../../components/Chat"
 
 import Loading from "../../components/Loading"
@@ -107,45 +108,69 @@ const LiveView = () => {
       <Head>
         <title>{item.title} - Stream-a-buy</title>
       </Head>
-      <PageHeader title={item.title} style={{margin: 'auto'}}>
-        <Content>
-          <p>{item.description}</p>
-          <If condition={item.owner === account}>
-            <Then>
-              <p>To start streaming, connect your streaming program to {liveInfo?.rtmp}</p>
-            </Then>
-            <Else>
-              <If condition={hasNft}>
-                <Then>
-                  <If condition={liveInfo?.active}>
-                    <Then>
-                      {() =>
-                        <Video
-                          src={liveInfo.playbackUrl}
-                        />
-                      }
-                    </Then>
-                    <Else>
-                      <p>Streaming has not started yet</p>
-                    </Else>
-                  </If>
-                  <Chat
-                    account={account}
-                    contentTopic={`/stream-a-buy/1/${address}/proto`}
-                  />
-                </Then>
-                <Else>
-                  <p>Sorry but you don&apos;t have the required NFT for accessing this event</p>
-                </Else>
-              </If>
-            </Else>
+      <Content>
+        <PageHeader title={item.title} style={{margin: 'auto'}}>
+          <If condition={!liveInfo?.active}>
+            <>
+              <Image alt='icon' src={item.uri+'/image.png'} />
+              <p>{item.description}</p>
+            </>
           </If>
-        </Content>
-      </PageHeader>
+        </PageHeader>
+        <If condition={item.owner === account}>
+          <Then>
+            <Alert
+              type='info'
+              showIcon
+              message={<>To start streaming, connect your streaming program to <code>{liveInfo?.rtmp}</code></>}
+            />
+          </Then>
+          <Else>
+            <If condition={hasNft}>
+              <Then>
+                <If condition={liveInfo?.active}>
+                  <Then>
+                    {() =>
+                      <Video
+                        src={liveInfo.playbackUrl}
+                      />
+                    }
+                  </Then>
+                  <Else>
+                    <p>Streaming has not started yet</p>
+                  </Else>
+                </If>
+              </Then>
+              <Else>
+                <Alert
+                  type='warning'
+                  showIcon
+                  message='Sorry but you don&apos;t have the required NFT for accessing this event 😢'
+                />
+              </Else>
+            </If>
+          </Else>
+        </If>
+        <If condition={hasNft || item.owner === account}>
+          <Chat
+            account={account}
+            contentTopic={`/stream-a-buy/1/${address}/proto`}
+          />
+        </If>
+      </Content>
     </Loading>
   )
 }
 
-LiveView.getLayout = (children) => <div>{children}</div>
+const LiveContainer = styled.div`
+  max-width: 80%;
+  margin: 0 auto;
+`
+
+LiveView.getLayout = (children) => (
+  <LiveContainer>
+    {children}
+  </LiveContainer>
+)
 
 export default LiveView

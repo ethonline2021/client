@@ -22,6 +22,7 @@ export const useItem = (account, address, library) => {
     price: ethers.BigNumber.from(0),
     endPaymnentDate: new Date(),
     flowRate: "0",
+    uri: '',
   })
   const [itemContract, setItemContract] = useState<ethers.Contract>()
   const [loading, setLoading] = useState(false)
@@ -76,6 +77,9 @@ export const useItemFlows = (account, address: string, library, decimals) => {
   const [flows, setFlows] = useState<Flow[]>([])
 
   const updateFlows = useCallback(async () => {
+    if (!data.purchaseFlows.length) {
+      return
+    }
     const flows = await Promise.all(
       data.purchaseFlows.map(async (flow) => ({
         ...flow,

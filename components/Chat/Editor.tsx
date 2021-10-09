@@ -1,6 +1,7 @@
-import { Button, Form, Input } from "antd"
+import { Button, Form, Input, Tag } from "antd"
 import { KeyboardEvent } from "react"
 import { If } from "react-if"
+import styled from "styled-components"
 
 const Editor = ({
   onChange,
@@ -20,29 +21,38 @@ const Editor = ({
   }
 
   return (
-    <>
-      <Form.Item>
-        <Input.TextArea
-          rows={4}
-          onChange={onChange}
-          onKeyUp={onKeyUp}
-          value={value}
-        />
-      </Form.Item>
-      <Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={submitting}
-          disabled={status !== 'Ready'}
-          onClick={onSubmit}
-        >
-          Send
-        </Button>
-        <If condition={status !== 'Ready'}>{status}</If>
-      </Form.Item>
-    </>
+    <MessageBox>
+      <Input.TextArea
+        rows={1}
+        onChange={onChange}
+        onKeyUp={onKeyUp}
+        value={value}
+        style={{resize: 'none'}}
+      />
+      <Button
+        type="primary"
+        htmlType="submit"
+        loading={submitting}
+        disabled={status !== 'Ready'}
+        onClick={onSubmit}
+        style={{height: 'auto'}}
+      >
+        Send
+      </Button>
+      <If condition={status !== 'Ready'}>
+        <InfoTag color='blue'>{status}</InfoTag>
+      </If>
+    </MessageBox>
   )
 }
+
+const InfoTag : typeof Tag = styled(Tag)`
+  margin-left: 10px;
+`
+
+const MessageBox = styled.div`
+  display: flex;
+  align-items: stretch;
+`
 
 export default Editor
