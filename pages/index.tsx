@@ -16,27 +16,11 @@ import { useContracts } from '../hooks/contracts'
 import CreateEvent from '../components/CreateEvent'
 
 const Home: NextPage = () => {
-  const {main, signer, setDeployed} = useContracts()
+  const {main, signer, deployed} = useContracts()
   const {account, active, activate, connector, library} = useWeb3React()
   const [contents, setContents] = useState()
   const [signupModal, setSignupModal] = useState(false)
   const [eventModal, setEventModal] = useState(false)
-
-  useEffect(() => {
-    ;(async () => {
-      if (active && main) {
-        const deployed = await main.getDeployedUser(account)
-
-        if (!/^0x0+0$/.test(deployed)) {
-          setDeployed(deployed)
-        } else {
-          setContents()
-        }
-      } else {
-        setContents(<p>Start by unlocking your wallet</p>)
-      }
-    })()
-  }, [active, main, account, activate, setDeployed, signer])
 
  return (
     <>
@@ -49,7 +33,14 @@ const Home: NextPage = () => {
         <Typography.Title style={{color: "#00162894"}} level={2}>Let the people pay by streams</Typography.Title>
       </StyledTitle>
 
-      { contents }
+      {!deployed && 
+        <Button>Signup</Button>
+      }
+      {deployed && 
+        <Button onClick={() => setEventModal(true)}>Start selling</Button>
+      }
+
+      <Button>Explore</Button>
       
       <SignUp
         visible={signupModal}
