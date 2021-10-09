@@ -9,7 +9,7 @@ const WalletErrors = () => {
     return null
   }
 
-  return <p style={{color: 'red'}}>{error.message || walletError}</p>
+  return <p style={{color: 'red'}}>{(error && error.message) || walletError}</p>
 }
 
 export default WalletErrors
