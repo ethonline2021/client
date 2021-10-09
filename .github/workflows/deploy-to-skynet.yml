@@ -30,3 +30,5 @@ jobs:
           upload-dir: out
           github-token: ${{ secrets.GITHUB_TOKEN }}
           registry-seed: ${{ secrets.SKYNET_REGISTRY_SEED || '' }}
+          try-files: index.html /index.html
+          not-found-page: 404.html
