@@ -112,7 +112,7 @@ const LiveView = () => {
         <PageHeader title={item.title} style={{margin: 'auto'}}>
           <If condition={!liveInfo?.active}>
             <>
-              <Image alt='icon' src={item.uri+'/image.png'} />
+              <Image alt='icon' src={`${item.uri}image.png`} />
               <p>{item.description}</p>
             </>
           </If>
@@ -163,8 +163,16 @@ const LiveView = () => {
 }
 
 const LiveContainer = styled.div`
-  max-width: 80%;
+  max-width: 90%;
   margin: 0 auto;
+
+  @media (min-width: 640px) {
+    max-width: 70%;
+  }
+
+  @media (min-width: 1200px) {
+    max-width: 1024px;
+  }
 `
 
 LiveView.getLayout = (children) => (
