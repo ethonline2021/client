@@ -1,12 +1,13 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Button, PageHeader, Table, Tag, Typography } from "antd"
+import { Alert, Button, PageHeader, Table, Tag, Typography } from "antd"
 import { ethers, Contract } from "ethers"
 import Head from "next/head"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
+import slug from 'slug'
 
 import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
@@ -47,6 +48,7 @@ const ItemsView = () => {
   const [ hasNft, setHasNft ] = useState<boolean>(false)
   const [ tokenContract, setTokenContract ] = useState<ethers.Contract|undefined>()
   const [ superTokenContract, setSuperTokenContract ] = useState<ethers.Contract|undefined>()
+  const [ensUrl, setEnsUrl] = useState<string|undefined>()
 
   // grab & set decimals
   useEffect(() => {
@@ -96,6 +98,13 @@ const ItemsView = () => {
       }
     })()
   }, [address, block, superTokenContract, realBalance, updating, account, item, itemContract])
+
+  useEffect(() => {
+    if (!ensUrl && item.title.length) {
+      const sl = slug(item.title, '_')
+      setEnsUrl(`https://${sl}.streamabuy.eth.link`)
+    }
+  }, [ensUrl, item])
 
   // grab nft amount
   useEffect(() => {
@@ -298,6 +307,14 @@ const ItemsView = () => {
             <p>
               The event will be accessible at: <Link href={`/items/live#${address}`}><a>{`/items/live#${address}`}</a></Link>
             </p>
+            <Alert
+              type='info'
+              showIcon
+              style={{marginBottom: '10px'}}
+              message={
+                <>We&apos;re working on friendly urls, so in a future you&apos;ll be able to access it through: {ensUrl}</>
+              }
+            />
             <p>
               This payment will be fully paid by the {item.endPaymentDate?.toDateString()}
             </p>

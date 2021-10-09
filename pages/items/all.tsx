@@ -24,7 +24,7 @@ const AllItemsList = () => {
 
   return (
     <Loading loading={loading}>
-      { data && data.items.length > 0 && 
+      { data && data.items.length > 0 &&
         <>
           <ItemsList gutter={[24, 24]}>
             {data.items.map((item, id) => {
