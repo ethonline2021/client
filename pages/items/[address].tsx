@@ -1,7 +1,8 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Button, PageHeader, Tag, Typography } from "antd"
+import { Button, PageHeader, Table, Tag, Typography } from "antd"
 import { ethers, Contract } from "ethers"
+import Head from "next/head"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
@@ -10,7 +11,7 @@ import { Else, If, Then } from "react-if"
 import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
 import { useContracts } from "../../hooks/contracts"
-import { useItem } from "../../hooks"
+import { useItem } from "../../hooks/item"
 import { decimal, parseItem } from "../../lib"
 import { Content } from "antd/lib/layout/layout"
 
@@ -18,6 +19,7 @@ import SuperfluidSDK from "@superfluid-finance/js-sdk"
 import { useErrors } from "../../providers"
 import { useFlow, useGraphFlow, useSuperfluid } from "../../hooks/superfluid"
 import styled from "styled-components"
+import { useItemFlows } from "../../hooks/item"
 
 const ItemsView = () => {
   const router = useRouter()
@@ -37,6 +39,7 @@ const ItemsView = () => {
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
   const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
   const { flow, setFlow, loading: loadingFlow } = useGraphFlow(address)
+  const { flows, loading: loadingFlows } = useItemFlows(account, address, library, decimals)
   const [ status, setStatus ] = useState<string|undefined>()
   const [ symbol, setSymbol ] = useState<string|undefined>()
   const [ hasNft, setHasNft ] = useState<boolean>(false)
@@ -284,12 +287,14 @@ const ItemsView = () => {
     setBuying(true)
     const withdraw = await itemContract.withdrawErc20(account, superTokenContract.address)
     const waitres = await withdraw.wait()
-    console.log('resulting waitres object:', waitres)
     setBuying(false)
   }
 
   return (
-    <div>
+    <>
+      <Head>
+        <title>{item.title} - Stream-a-buy</title>
+      </Head>
       <Loading loading={loading}>
         <PageHeader
           title={item.title}
@@ -371,14 +376,49 @@ const ItemsView = () => {
                 </Buttons>
               </Else>
             </If>
+            <If condition={item  && account && item.owner === account}>
+              <>
+                <FlowsTitle>Incoming flows</FlowsTitle>
+                <Table
+                  dataSource={
+                    flows.map((flow, k) => ({
+                      ...flow,
+                      key: k,
+                    }))
+                  }
+                  columns={[
+                    {
+                      title: 'Buyer',
+                      dataIndex: 'buyer',
+                      key: 'buyer',
+                    },
+                    {
+                      title: 'Status',
+                      dataIndex: 'status',
+                      key: 'status',
+                    },
+                    {
+                      title: 'Paid already',
+                      dataIndex: 'paid',
+                      key: 'paid',
+                    }
+                  ]}
+                />
+              </>
+            </If>
           </Content>
         </PageHeader>
       </Loading>
-    </div>
+    </>
   )
 }
 
 export default ItemsView
+
+const FlowsTitle = styled.h3`
+  font-size: 22px;
+  margin-top: 20px;
+`
 
 const Buttons = styled.div`
   display: flex;

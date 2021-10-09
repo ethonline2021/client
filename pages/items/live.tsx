@@ -13,7 +13,8 @@ import Chat from "../../components/Chat"
 
 import Loading from "../../components/Loading"
 import Video from "../../components/Video"
-import { useEagerConnect, useItem } from "../../hooks"
+import { useEagerConnect } from "../../hooks"
+import { useItem } from "../../hooks/item"
 import { useGraphFlow } from "../../hooks/superfluid"
 
 const LiveView = () => {
@@ -104,7 +105,7 @@ const LiveView = () => {
   return (
     <Loading loading={loading || loadingFlow}>
       <Head>
-        <title>{item.title} - Stream a buy</title>
+        <title>{item.title} - Stream-a-buy</title>
       </Head>
       <PageHeader title={item.title} style={{margin: 'auto'}}>
         <Content>

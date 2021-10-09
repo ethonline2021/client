@@ -18,26 +18,25 @@ import CreateEvent from '../components/CreateEvent'
 const Home: NextPage = () => {
   const {main, signer, deployed} = useContracts()
   const {account, active, activate, connector, library} = useWeb3React()
-  const [contents, setContents] = useState()
   const [signupModal, setSignupModal] = useState(false)
   const [eventModal, setEventModal] = useState(false)
 
  return (
     <>
     <Head>
-      <title>Stream a buy</title>
+      <title>Stream-a-buy</title>
     </Head>
     <div>
       <StyledTitle>
         <Typography.Title style={{fontSize: "60px", color: "#001628", marginBottom: "0.1em"}}>💸 Stream-A-Buy</Typography.Title>
         <Typography.Title style={{marginTop: "0", color: "#00162894", fontWeight: "normal", "fontSize": "17px"}} level={2}>Let the people pay by streams</Typography.Title>
-      
+
         <Actions>
-          {!deployed && 
+          {!deployed &&
             <Button type="primary" size="large" onClick={() => setSignupModal(true)}>Signup</Button>
           }
 
-          {deployed && 
+          {deployed &&
             <Button type="primary" size="large" onClick={() => setEventModal(true)}>Start selling</Button>
           }
 
@@ -45,7 +44,6 @@ const Home: NextPage = () => {
         </Actions>
       </StyledTitle>
 
-      
       <SignUp
         visible={signupModal}
         close={() => setSignupModal(false)}
