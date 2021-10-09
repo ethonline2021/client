@@ -17,11 +17,11 @@ export const useItem = (account, address, library) => {
   const [item, setItem] = useState({
     title: '',
     description: '',
+    token: '',
     amount: 0,
     owner: '',
     price: ethers.BigNumber.from(0),
     endPaymnentDate: new Date(),
-    flowRate: "0",
     uri: '',
   })
   const [itemContract, setItemContract] = useState<ethers.Contract>()

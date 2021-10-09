@@ -25,9 +25,9 @@ const networks : Networks = {
   80001: {
     key: 'mumbai',
     title: 'Mumbai testnet',
-    main: '0xd081a1Fb56841212FA2E08cd2baB56389E7596e8',
+    main: '0xA1c126737C957F1c519a08e20912581C8bD8dE8B',
     payments: '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.22',
+    graph: 'https://api.studio.thegraph.com/query/10173/ethonline2021/v0.0.23',
   },
 }
 

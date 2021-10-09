@@ -49,9 +49,9 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
 
     try {
       const signer = library.getSigner(account)
-      paytoken = new ethers.Contract(networks[chainId].payments, Erc20.abi, signer)
+      paytoken = new ethers.Contract(item.token, Erc20.abi, signer)
     } catch (e) {
-      console.error('error initializing payments token (fDaix):', e)
+      console.error('error initializing payments token:', e)
 
       setLoading(false)
       return false
@@ -177,6 +177,13 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
           rules={[{required: true}]}
         >
           <Input type="number" step="0.00000001" min="0" />
+        </Form.Item>
+        <Form.Item
+          label="Token"
+          name="token"
+          rules={[{required: true}]}
+        >
+          <Input type="text" />
         </Form.Item>
         <Form.Item label="Payment limit date" name="endPaymentDate" rules={[{required: true}]}>
           <DatePicker

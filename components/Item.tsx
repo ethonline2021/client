@@ -7,21 +7,28 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { useSuperfluid } from '../hooks/superfluid'
 import styled from 'styled-components'
+import Erc20 from '../contracts/contracts/utils/Erc20.sol/Erc20.json'
 
 const Item = ({title, description, address, price, token, uri}) => {
   const router = useRouter()
   const [ symbol, setSymbol ] = useState<string|undefined>()
   const { account, library } = useWeb3React()
-  const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
+  const [ tokenContract, setTokenContract ] = useState<ethers.Contract|undefined>()
 
   // grab & set symbol
   useEffect(() => {
     ;(async () => {
+      if(!library) return;
+      if(!tokenContract){
+        const signer = library.getSigner(account)
+        setTokenContract(new ethers.Contract(token, Erc20.abi, signer))
+      }
+
       if (!symbol && tokenContract) {
         setSymbol(await tokenContract.symbol())
       }
     })()
-  }, [tokenContract, symbol])
+  }, [library, tokenContract, symbol])
 
   return (
     <Card 

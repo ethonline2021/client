@@ -20,6 +20,8 @@ import { useErrors } from "../../providers"
 import { useFlow, useGraphFlow, useSuperfluid } from "../../hooks/superfluid"
 import styled from "styled-components"
 import { useItemFlows } from "../../hooks/item"
+import ISuperToken from '../../contracts/@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol/ISuperToken.json'
+import Erc20 from '../../contracts/contracts/utils/Erc20.sol/Erc20.json'
 
 const ItemsView = () => {
   const router = useRouter()
@@ -37,31 +39,43 @@ const ItemsView = () => {
   const { setError } = useErrors()
   const [ stock, setStock ] = useState(0)
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
-  const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
+  const { superfluid } = useSuperfluid(library)
   const { flow, setFlow, loading: loadingFlow } = useGraphFlow(address)
   const { flows, loading: loadingFlows } = useItemFlows(account, address, library, decimals)
   const [ status, setStatus ] = useState<string|undefined>()
   const [ symbol, setSymbol ] = useState<string|undefined>()
   const [ hasNft, setHasNft ] = useState<boolean>(false)
+  const [ tokenContract, setTokenContract ] = useState<ethers.Contract|undefined>()
+  const [ superTokenContract, setSuperTokenContract ] = useState<ethers.Contract|undefined>()
 
   // grab & set decimals
   useEffect(() => {
     ;(async () => {
-      if (!decimals && superTokenContract) {
-        try {
-          const dec = await superTokenContract.decimals()
-          setDecimals(dec)
-        } catch (e) {
-          console.error('error grabbing decimals')
-        }
+      if(!library || !item.token) return;
+
+      if(!superTokenContract){
+        const signer = library.getSigner(account)
+        const stcontract = new ethers.Contract(item.token, ISuperToken.abi, signer);
+        setSuperTokenContract(stcontract)
+
+        const underlyingToken = await stcontract.getUnderlyingToken();
+        const tContract = new ethers.Contract(underlyingToken, Erc20.abi, signer);
+        setTokenContract(tContract);
+
+        const decimals = await stcontract.decimals();
+        setDecimals(decimals);
+        setSymbol(await stcontract.symbol())
+
+        setPrice(item.price / Math.pow(10, decimals))
       }
     })()
-  }, [decimals, superTokenContract])
+  }, [library, item])
 
   // grab and set balance & stock
   useEffect(() => {
     ;(async () => {
       if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account && itemContract) {
+        console.log('hmmmm');
         setUpdating(true)
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
@@ -70,7 +84,6 @@ const ItemsView = () => {
         } catch (e) {
           console.error('error grabbing balance:', e)
           setUpdating(false)
-
           return
         }
 
@@ -84,15 +97,6 @@ const ItemsView = () => {
       }
     })()
   }, [address, block, superTokenContract, realBalance, updating, account, item, itemContract])
-
-  // set price
-  useEffect(() => {
-    ;(async () => {
-      if (!price && decimals && item) {
-        setPrice(item.price / Math.pow(10, decimals))
-      }
-    })();
-  }, [price, decimals, item])
 
   // grab nft amount
   useEffect(() => {
@@ -118,18 +122,9 @@ const ItemsView = () => {
 
   }, [item, flow, itemContract, account])
 
-  // grab & set symbol
-  useEffect(() => {
-    ;(async () => {
-      if (!symbol && tokenContract) {
-        setSymbol(await tokenContract.symbol())
-      }
-    })(symbol)
-  }, [tokenContract, symbol])
-
   // block update event updating balance
   useEffect(() => {
-    if (library && !library._events.length && superTokenContract && decimals) {
+    if (library && !library._events.length && superTokenContract) {
       library.on('block', async (bh: any) => {
         setBlock(bh)
         if (updating) {
@@ -149,7 +144,7 @@ const ItemsView = () => {
         library.removeAllListeners('block')
       }
     }
-  }, [account, address, block, superTokenContract, library, updating, itemContract, decimals])
+  }, [account, address, block, superTokenContract, library, updating, itemContract])
 
   const purchase = async () => {
     if (!superfluid || !superTokenContract || !tokenContract) {
@@ -161,11 +156,9 @@ const ItemsView = () => {
     setStatus('initializing')
     if (!Number(await itemContract.availableAmount())) {
       const err = 'no items available for purchase'
-
       console.error(err)
       setError(err)
       setBuying(false)
-
       return false
     }
 
@@ -175,10 +168,11 @@ const ItemsView = () => {
       console.log('account does not have enough balance', balance.toString(), item.price.toString())
       // this should be only with superfluid test tokens
       if ((await tokenContract.balanceOf(account)).lt(item.price)) {
-        setStatus('minting some fake tokens')
-        const mint = await tokenContract.mint(account, ethers.utils.parseEther("1000"))
-        // wait for tx
-        await mint.wait()
+        const err = 'not enough tokens available to purchase'
+        console.error(err)
+        setError(err)
+        setBuying(false)
+        return false
       }
 
       // approve
