@@ -1,3 +1,4 @@
+import { UploadOutlined } from '@ant-design/icons';
 import { TransactionReceipt, TransactionRequest, TransactionResponse } from '@ethersproject/providers'
 import { useWeb3React } from '@web3-react/core'
 import {
@@ -7,7 +8,9 @@ import {
   Form,
   Input,
   Modal,
+  Upload,
 } from 'antd'
+import { RcFile } from 'antd/lib/upload'
 import axios from 'axios'
 import { ethers } from 'ethers'
 import { useRouter } from 'next/router'
@@ -32,11 +35,18 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
   const { main } = useContracts()
   const [ step, setStep ] = useState<string|undefined>()
   const { executeMetaTx } = useMetaTx();
+  const [ image, setImage ] = useState<RcFile|undefined>()
 
   const onSubmit = async (item: Item) => {
+    if (!image) {
+      console.error('missing image')
+      return false
+    }
+
     setLoading(true)
     let paytoken : ethers.Contract
     setStep('Initializing')
+
     try {
       const signer = library.getSigner(account)
       paytoken = new ethers.Contract(networks[chainId].payments, Erc20.abi, signer)
@@ -62,7 +72,14 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
     let itemAddress : string
     try {
       setStep('Creating NFT files')
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_ENDPOINT}api/nfts/upload`, item)
+      const itemData = new FormData()
+      Object.keys(item).forEach((key) => {
+        itemData.append(key, item[key])
+      })
+      if (image) {
+        itemData.append('image', image, image.name)
+      }
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_ENDPOINT}api/nfts/upload`, itemData)
 
       setStep('Deploying item contract')
       let tx : TransactionResponse
@@ -124,7 +141,6 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
     >
       <Form
         layout="vertical"
-        initialValues={title, description, price, endPaymentDate, amount}
         onFinish={onSubmit}
         id="create-event-form"
       >
@@ -141,6 +157,19 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
           rules={[{required: true}]}
         >
           <Input.TextArea />
+        </Form.Item>
+        <Form.Item label="Image" required>
+          <Upload
+            onRemove={(file) => {
+              setImage()
+            }}
+            beforeUpload={(file) => {
+              setImage(file)
+            }}
+            fileList={image ? [image] : []}
+          >
+            <Button icon={<UploadOutlined />}>Upload</Button>
+          </Upload>
         </Form.Item>
         <Form.Item
           label="Price"

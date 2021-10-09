@@ -8,9 +8,10 @@ import { useContracts } from "../hooks/contracts"
 import { useEagerConnect } from "../hooks"
 import SignUp from "./Signup"
 import Profile from "./Profile"
+import { ethers } from 'ethers'
 
 const Wallet = () => {
-  const { account: loggedAccount, activate, active, connector, library } = useWeb3React()
+  const { account: loggedAccount, activate, active, connector, library, chainId } = useWeb3React()
   const { main, signer, setDeployed, deployed, account, setAccount } = useContracts()
   const [ signupModal, setSignupModal ] = useState(false)
   const [ profileModal, setProfileModal ] = useState(false)

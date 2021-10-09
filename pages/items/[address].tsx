@@ -36,7 +36,7 @@ const ItemsView = () => {
   const [ stock, setStock ] = useState(0)
   const [ paid, setPaid ] = useState(ethers.BigNumber.from(0))
   const { superfluid, superTokenContract, tokenContract } = useSuperfluid(library)
-  const {flow, setFlow, loading: loadingFlow} = useGraphFlow(address)
+  const { flow, setFlow, loading: loadingFlow } = useGraphFlow(address)
   const [ status, setStatus ] = useState<string|undefined>()
   const [ symbol, setSymbol ] = useState<string|undefined>()
   const [ hasNft, setHasNft ] = useState<boolean>(false)
