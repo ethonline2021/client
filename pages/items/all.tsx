@@ -1,9 +1,6 @@
-import { LoadingOutlined } from "@ant-design/icons"
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Spin } from "antd"
-import Link from "next/link"
-import { ReactNode, useEffect } from "react"
+import { Col, Row } from "antd"
 import styled from "styled-components"
 
 import Item from "../../components/Item"
@@ -25,13 +22,28 @@ const AllItemsList = () => {
 
   return (
     <Loading loading={loading}>
-      {
-        data && data.items.length > 0 && data.items.map((item, id) => {
-          return <Item key={id} {...item} />
-        })
+      { data && data.items.length > 0 && 
+        <>
+          <ItemsList gutter={[24, 24]}>
+            {data.items.map((item, id) => {
+              return (
+                <Col key={id} xs={24} sm={8}>
+                  <Item key={id} {...item} />
+                </Col>
+              )
+            })}
+          </ItemsList>
+        </>
       }
     </Loading>
   )
 }
 
+const ItemsList = styled(Row)`
+	display: flex;
+	flex-wrap: wrap;
+  margin-bottom: 40px;
+`
+
 export default AllItemsList
+

@@ -1,25 +1,20 @@
-import Link from 'next/link'
-import styled from 'styled-components'
+import { Card } from 'antd'
+import Meta from 'antd/lib/card/Meta'
+
+import { useRouter } from 'next/router'
 
 const Item = ({title, description, address}) => {
-  const Wrapper = styled.div`
-    display: flex;
-    flex-direction: column;
-  `
-
-  const P = styled.p`
-    flex: 1;
-  `
+  const router = useRouter()
 
   return (
-    <Wrapper>
-      <div>
-        <Link href={`/items/${address}`}>
-          <a>{title}</a>
-        </Link>
-      </div>
-      <P>{description}</P>
-    </Wrapper>
+    <Card 
+      onClick={() => router.push(`/items/${address}`)}
+      hoverable={true}
+      cover={<img alt="example" src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png" />}
+      actions={[]}
+    >
+      <Meta title={title} description={description} />
+    </Card>
   )
 }
 

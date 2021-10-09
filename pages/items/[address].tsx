@@ -1,6 +1,6 @@
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Button, PageHeader, Tag } from "antd"
+import { Button, PageHeader, Tag, Typography } from "antd"
 import { ethers, Contract } from "ethers"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -296,12 +296,12 @@ const ItemsView = () => {
           onBack={() => history.back()}
         >
           <Content>
-            <p>{item.description}</p>
+            <Text>{item.description}</Text>
             <p>
               The event will be accessible at: <Link href={`/items/live#${address}`}><a>{`/items/live#${address}`}</a></Link>
             </p>
             <p>
-              Payment limit date: {item.endPaymentDate?.toDateString()}
+              This payment will be fully paid by the {item.endPaymentDate?.toDateString()}
             </p>
             <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
               <Then>
@@ -349,11 +349,11 @@ const ItemsView = () => {
                                 loading={buying}
                                 disabled={buying}
                               >
-                                Cancel assistance
+                                Cancel
                               </Button>
                             </Else>
                           </If>
-                          <InfoTag color='green'>Paid {decimal(paid, decimals)}{symbol} already (out of {price}{symbol})</InfoTag>
+                          <InfoTag color='green'>Paid {decimal(paid, decimals)} {symbol} (out of {price} {symbol})</InfoTag>
                         </Then>
                         <Else>
                           <If condition={flow && flow.status === 'Finished' && hasNft}>
@@ -387,4 +387,8 @@ const Buttons = styled.div`
 
 const InfoTag : typeof Tag = styled(Tag)`
   margin-left: 10px;
+`
+
+const Text = styled.p`
+  font-size:20px;
 `
