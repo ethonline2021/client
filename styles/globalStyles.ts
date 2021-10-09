@@ -10,6 +10,17 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: inherit;
     font-family: Roboto, Arial, sans-serif;
   }
+
+  .ant-card-cover{
+    height:230px;
+    overflow:hidden;
+  }
+
+  .homesponsorimg {
+    height:50px;
+    margin-right:50px;
+    margin-bottom:20px;
+  }
 `
 
 export default GlobalStyle

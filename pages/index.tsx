@@ -1,23 +1,16 @@
-import { useQuery, gql } from "@apollo/client"
-import { Button, Col, Input, Modal, Row, Title, Typography } from 'antd'
-import { ethers } from 'ethers'
+import { Button, Col,Row, Typography } from 'antd'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
-import { If, Then, Else }  from 'react-if'
-import { Client } from '@livepeer/webrtmp-sdk'
+import { useState } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import styled from 'styled-components'
 
-import UserContract from '../contracts/contracts/User.sol/User.json'
 import SignUp from '../components/Signup'
 import { useContracts } from '../hooks/contracts'
 import CreateEvent from '../components/CreateEvent'
 
 const Home: NextPage = () => {
-  const {main, signer, deployed} = useContracts()
-  const {account, active, activate, connector, library} = useWeb3React()
+  const {deployed} = useContracts()
   const [signupModal, setSignupModal] = useState(false)
   const [eventModal, setEventModal] = useState(false)
 
@@ -44,6 +37,31 @@ const Home: NextPage = () => {
         </Actions>
       </StyledTitle>
 
+      <Row>
+          <Col style={{textAlign: "center"}} span={16} offset={4}>
+            <img src="/assets/ethereum.png" className="homesponsorimg" />
+            <img src="/assets/superfluid.png" className="homesponsorimg" />
+            <img src="/assets/polygon.svg" className="homesponsorimg" />
+            <img src="/assets/skynet.svg" className="homesponsorimg" />
+            <img src="/assets/thegraph.svg" className="homesponsorimg" />
+            <img src="/assets/chainlink.png" className="homesponsorimg" />
+            <img src="/assets/biconomy.svg" className="homesponsorimg" />
+            <img src="/assets/ipfs.png" className="homesponsorimg" />
+            <img src="/assets/livepeer.svg" className="homesponsorimg" />
+            <img src="/assets/status.svg" className="homesponsorimg" />
+            <img src="/assets/ens.svg" className="homesponsorimg" />
+          </Col>
+          {/* <Col span={10}>
+            <StyledList>
+              <li>✅ Streaming payments with no capital lockups</li>
+              <li>✅ Own your purchases - With NFT's</li>
+              <li>✅ Permanent storage - Content is forever available</li>
+              <li>✅ Built in decentralized video streaming + chat</li>
+              <li>✅ Super low fees</li>
+            </StyledList>
+          </Col> */}
+      </Row>
+
       <SignUp
         visible={signupModal}
         close={() => setSignupModal(false)}
@@ -60,12 +78,18 @@ const Home: NextPage = () => {
 }
 
 const StyledTitle = styled.div`
-  margin:35px 0 50px 0;
+  margin:35px 0 180px 0;
   text-align:center;
 `
 
 const Actions = styled.div`
   margin-top: 40px;
+`
+const StyledList = styled.ul`
+  list-style: none;
+  padding: 0;
+  font-size:16px;
+  color: #333;
 `
 
 

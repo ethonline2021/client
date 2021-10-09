@@ -30,6 +30,10 @@ const Item = ({title, description, address, price, token, uri}) => {
     })()
   }, [library, tokenContract, symbol])
 
+  let desc = description;
+  if(desc.length > 200){
+    desc = description.substring(0,200) + "..."
+  }
   return (
     <Card 
       onClick={() => router.push(`/items/${address}`)}
@@ -37,14 +41,13 @@ const Item = ({title, description, address, price, token, uri}) => {
       cover={<img alt="example" src={`${uri}/image.png`} />}
       actions={[]}
     >
-      <Meta title={title} description={description} />
+      <Meta title={title} description={desc} />
       <StyledDiv>
         <Button type="primary">Buy for {ethers.utils.formatEther(price)} {symbol}</Button>
       </StyledDiv>
     </Card>
   )
 }
-
 
 const StyledDiv = styled.div`
   display:flex;

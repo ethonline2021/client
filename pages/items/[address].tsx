@@ -1,7 +1,6 @@
-import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Alert, Button, PageHeader, Table, Tag, Typography } from "antd"
-import { ethers, Contract } from "ethers"
+import { Alert, Button, PageHeader, Table, Tag } from "antd"
+import { ethers } from "ethers"
 import Head from "next/head"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -9,16 +8,13 @@ import { useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
 import slug from 'slug'
 
-import ItemContract from "../../contracts/contracts/Item.sol/Item.json"
 import Loading from "../../components/Loading"
-import { useContracts } from "../../hooks/contracts"
 import { useItem } from "../../hooks/item"
 import { decimal, parseItem } from "../../lib"
 import { Content } from "antd/lib/layout/layout"
 
-import SuperfluidSDK from "@superfluid-finance/js-sdk"
 import { useErrors } from "../../providers"
-import { useFlow, useGraphFlow, useSuperfluid } from "../../hooks/superfluid"
+import { useGraphFlow, useSuperfluid } from "../../hooks/superfluid"
 import styled from "styled-components"
 import { useItemFlows } from "../../hooks/item"
 import ISuperToken from '../../contracts/@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol/ISuperToken.json'
@@ -342,8 +338,9 @@ const ItemsView = () => {
                         disabled={price === 0 || buying || !stock}
                         loading={buying}
                         onClick={purchase}
+                        type="primary"
                       >
-                        Buy one for {price}{symbol} ({stock.toString()} left)
+                        Buy one for {price} {symbol} ({stock.toString()} left)
                       </Button>
                     </Then>
                     <Else>
@@ -437,6 +434,7 @@ const Buttons = styled.div`
 
 const InfoTag : typeof Tag = styled(Tag)`
   margin-left: 10px;
+  padding:5px 15px;
 `
 
 const Text = styled.p`
