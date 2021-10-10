@@ -112,7 +112,12 @@ const LiveView = () => {
         <PageHeader title={item.title} style={{margin: 'auto'}}>
           <If condition={!liveInfo?.active}>
             <>
-              <Image alt='icon' src={`${item.uri}image.png`} />
+              <LiveImageWrapper>
+                <Image
+                  alt='event header image'
+                  src={`${item.uri}image.png`}
+                />
+              </LiveImageWrapper>
               <p>{item.description}</p>
             </>
           </If>
@@ -183,6 +188,12 @@ const LiveContainer = styled.div`
 
   @media (min-width: 1200px) {
     max-width: 1024px;
+  }
+`
+
+const LiveImageWrapper = styled.div`
+  &, .ant-image-img, .ant-image {
+    width: 100%;
   }
 `
 

@@ -1,19 +1,23 @@
 import { LoadingOutlined, EyeOutlined, PlayCircleOutlined } from "@ant-design/icons"
 import { useQuery, gql } from "@apollo/client"
 import { useWeb3React } from "@web3-react/core"
-import { Button, Spin, Table } from "antd"
+import { Button, message, Spin, Table } from "antd"
 import ButtonGroup from "antd/lib/button/button-group"
 import { ethers } from "ethers"
 import Link from "next/link"
+import { useRouter } from "next/router"
 import { ReactNode, useCallback, useEffect, useState } from "react"
 import styled from "styled-components"
 
 import ERC20Contract from "../../contracts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json"
+import { useContracts } from "../../hooks/contracts"
 import { decimal } from "../../lib"
 
 
 const MyItemsList = () => {
   const { account, library } = useWeb3React()
+  const { deployed } = useContracts()
+  const { push } = useRouter()
   const ITEMS_LIST = gql`
     query Item($account: String!) {
       items(where: {owner: $account}) {
@@ -34,11 +38,19 @@ const MyItemsList = () => {
   const [ items, setItems ] = useState([])
   const [ updating, setUpdating ] = useState(false)
 
+  useEffect(() => {
+    if (account && library && !deployed && push) {
+      message.warn('You are not signed-up')
+      push('/')
+    }
+  }, [account, deployed, library, push])
+
   const populateItems = useCallback(() => {
     ;(async () => {
-      if (updating) {
+      if (updating || !data.items.length) {
         return
       }
+
       setUpdating(true)
       const items = await Promise.all(
         data.items.map(async (item, key) => {

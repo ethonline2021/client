@@ -4,7 +4,7 @@ import { ethers } from "ethers"
 import Head from "next/head"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Else, If, Then } from "react-if"
 import slug from 'slug'
 
@@ -25,8 +25,6 @@ const ItemsView = () => {
   const [ realBalance, setRealBalance ] = useState(ethers.BigNumber.from(0))
   const [ price, setPrice ] = useState(0)
   const [ block, setBlock ] = useState(0)
-  const [ updating, setUpdating ] = useState(false)
-  const [ contentLoading, setContentLoading ] = useState(false)
   const { address } = router.query
   const { account, library } = useWeb3React()
   const [ buying, setBuying ] = useState(false)
@@ -45,13 +43,14 @@ const ItemsView = () => {
   const [ tokenContract, setTokenContract ] = useState<ethers.Contract|undefined>()
   const [ superTokenContract, setSuperTokenContract ] = useState<ethers.Contract|undefined>()
   const [ensUrl, setEnsUrl] = useState<string|undefined>()
+  const [ updating, setUpdating ] = useState<boolean>(false)
 
   // grab & set decimals
   useEffect(() => {
     ;(async () => {
       if(!library || !item.token) return;
 
-      if(!superTokenContract){
+      if (!superTokenContract) {
         const signer = library.getSigner(account)
         const stcontract = new ethers.Contract(item.token, ISuperToken.abi, signer);
         setSuperTokenContract(stcontract)
@@ -67,33 +66,58 @@ const ItemsView = () => {
         setPrice(item.price / Math.pow(10, decimals))
       }
     })()
-  }, [library, item])
+  }, [library, item, superTokenContract, account])
 
-  // grab and set balance & stock
-  useEffect(() => {
+  const updateStuff = useCallback(() => {
     ;(async () => {
-      if (superTokenContract && !updating && realBalance.isZero() && address && item.owner === account && itemContract) {
-        setUpdating(true)
+      if (!superTokenContract || !address || !account || !itemContract || updating || !item) {
+        return
+      }
+
+      // could be improved with a Promise.all to grab in parallel
+      setUpdating(true)
+      if (item && item.owner === account) {
         try {
           setRealBalance(await superTokenContract.balanceOf(address))
-          setPaid(await itemContract.totalPaid(account))
-          setContentLoading(false)
         } catch (e) {
           console.error('error grabbing balance:', e)
-          setUpdating(false)
-          return
         }
+      }
+      try {
+        setPaid(await itemContract.totalPaid(account))
+      } catch (e) {
+        console.error('error grabbing total paid:', e)
+      }
+      try {
+        setStock(Number(await itemContract.availableAmount()))
+      } catch (e) {
+        console.error('error grabbing stock:', e)
+      }
+      setUpdating(true)
 
-        try {
-          setStock(Number(await itemContract.availableAmount()))
-        } catch (e) {
-          console.error('error grabbing available slots:', e)
+    })()
+  }, [account, address, item, itemContract, superTokenContract, updating])
+
+  // grab and set stuff (+ init data update interval)
+  useEffect(() => {
+    let interval : Number
+
+    ;(async () => {
+      if (!superTokenContract || updating || !realBalance.isZero() || !address || !itemContract || !item) {
+        return
+      }
+
+      await updateStuff()
+
+      interval = setInterval(updateStuff, 3000)
+
+      return () => {
+        if (interval) {
+          clearInterval(interval)
         }
-
-        setUpdating(false)
       }
     })()
-  }, [address, block, superTokenContract, realBalance, updating, account, item, itemContract])
+  }, [address, block, superTokenContract, realBalance, account, item, itemContract, updateStuff, updating])
 
   useEffect(() => {
     if (!ensUrl && item.title.length) {
@@ -126,29 +150,6 @@ const ItemsView = () => {
 
   }, [item, flow, itemContract, account])
 
-  // block update event updating balance
-  useEffect(() => {
-    if (library && !library._events.length && superTokenContract) {
-      library.on('block', async (bh: any) => {
-        setBlock(bh)
-        if (updating) {
-          return false
-        }
-
-        setUpdating(true)
-        setPaid(await itemContract.totalPaid(account))
-        setStock(Number(await itemContract.availableAmount()))
-        setRealBalance(await superTokenContract.balanceOf(address))
-        setUpdating(false)
-      })
-    }
-
-    return () => {
-      if (library && library._events.length) {
-        library.removeAllListeners('block')
-      }
-    }
-  }, [account, address, block, superTokenContract, library, updating, itemContract])
 
   const purchase = async () => {
     if (!superfluid || !superTokenContract || !tokenContract) {
@@ -318,7 +319,7 @@ const ItemsView = () => {
             <If condition={item.owner?.toLowerCase() === account?.toLowerCase()}>
               <Then>
                 <p>
-                  Current income: {contentLoading ? 'loading..' : decimal(realBalance, decimals)}
+                  Current income: {decimal(realBalance, decimals)}
                 </p>
                 <Buttons>
                   <Button
