@@ -72,7 +72,7 @@ const LiveView = () => {
 
       await fetchInfo()
       if (!interval) {
-        interval = setInterval(fetchInfo, 10000)
+        interval = setInterval(fetchInfo, 6000)
       }
     })()
 

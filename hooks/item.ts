@@ -95,7 +95,7 @@ export const useItemFlows = (account, address: string, library, decimals) => {
       if (itemContract && decimals && !loading && data && !flows.length) {
         await updateFlows()
 
-        interval = setInterval(updateFlows, 3000)
+        interval = setInterval(updateFlows, 2000)
       }
     })()
 
@@ -104,7 +104,7 @@ export const useItemFlows = (account, address: string, library, decimals) => {
         clearInterval(interval)
       }
     }
-  }, [loading, data, flows, itemContract, decimals])
+  }, [loading, data, flows, itemContract, decimals, updateFlows])
 
   return {
     loading,

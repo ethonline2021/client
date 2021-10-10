@@ -54,7 +54,7 @@ const Menu = () => {
     if (deployed && menu.length === items.length) {
       setMenu([...items, {
         path: '/items',
-        link: 'My items',
+        link: 'Dashboard',
       }])
     }
 
