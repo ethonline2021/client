@@ -1,5 +1,6 @@
 import { Button, Col,Row, Typography } from 'antd'
 import type { NextPage } from 'next'
+import Link from 'next/link'
 import Head from 'next/head'
 import { useState } from 'react'
 import { useWeb3React } from '@web3-react/core'
@@ -33,7 +34,9 @@ const Home: NextPage = () => {
             <Button type="primary" size="large" onClick={() => setEventModal(true)}>Start selling</Button>
           }
 
-          <Button href="/items/all" type="primary" size="large" style={{marginLeft:"10px"}}>Explore</Button>
+          <Link href="/items/all" passHref>
+            <Button type="primary" size="large" style={{marginLeft:"10px"}}>Explore</Button>
+          </Link>
         </Actions>
       </StyledTitle>
 
