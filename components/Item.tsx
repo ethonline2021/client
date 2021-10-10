@@ -18,8 +18,9 @@ const Item = ({title, description, address, price, token, uri}) => {
   // grab & set symbol
   useEffect(() => {
     ;(async () => {
-      if(!library) return;
-      if(!tokenContract){
+      if (!library) return
+
+      if (!tokenContract && account) {
         const signer = library.getSigner(account)
         setTokenContract(new ethers.Contract(token, Erc20.abi, signer))
       }
@@ -28,7 +29,7 @@ const Item = ({title, description, address, price, token, uri}) => {
         setSymbol(await tokenContract.symbol())
       }
     })()
-  }, [library, tokenContract, symbol])
+  }, [library, tokenContract, symbol, account])
 
   let desc = description;
   if(desc.length > 200){
