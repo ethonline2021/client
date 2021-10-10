@@ -29,7 +29,7 @@ const AllItemsList = () => {
           <ItemsList gutter={[24, 24]}>
             {data.items.map((item, id) => {
               return (
-                <Col key={id} xs={24} sm={8}>
+                <Col key={id} xs={24} sm={12} md={8}>
                   <Item key={id} {...item} />
                 </Col>
               )

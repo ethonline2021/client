@@ -36,7 +36,7 @@ const Item = ({title, description, address, price, token, uri}) => {
     desc = description.substring(0,200) + "..."
   }
   return (
-    <Card 
+    <StyledCard
       onClick={() => router.push(`/items/${address}`)}
       hoverable={true}
       cover={<img alt="example" src={`${uri}/image.png`} />}
@@ -46,9 +46,16 @@ const Item = ({title, description, address, price, token, uri}) => {
       <StyledDiv>
         <Button type="primary">Buy for {ethers.utils.formatEther(price)} {symbol}</Button>
       </StyledDiv>
-    </Card>
+    </StyledCard>
   )
 }
+
+const StyledCard : typeof Card = styled(Card)`
+  .ant-card-cover {
+    min-height: 50px;
+    height: auto;
+  }
+`
 
 const StyledDiv = styled.div`
   display:flex;
