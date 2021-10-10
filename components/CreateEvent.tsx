@@ -61,7 +61,9 @@ const CreateEvent = ({visible, close} : {visible: boolean, close: () => void}) =
     try {
       const preDecimals = await paytoken.decimals()
       const decimals = ethers.BigNumber.from(10).pow(preDecimals)
-      price = ethers.BigNumber.from(item.price).mul(decimals)
+      const numprice = item.price * Number(decimals.toString())
+
+      price = ethers.BigNumber.from(numprice.toString())
     } catch (e) {
       console.error('error grabbing decimals', e)
 
